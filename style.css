@@ -1,0 +1,29 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+canvas {
+  background-color: black;
+}
+
+.pause {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  bottom: 40px;
+  z-index: 5;
+  right: 60px;
+}
+
+.pause img {
+  height: 100%;
+  user-select: none;
+}
