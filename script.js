@@ -346,10 +346,19 @@ class Base {
 window.addEventListener("resize", () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+  player.draw();
   scoreBoard.resize();
   healthBar.resize();
   base.resize();
-  init();
+  scoreBoard.write();
+  healthBar.draw();
+  base.draw();
+  bullets.forEach((ele) => {
+    ele.draw();
+  });
+  enemies.forEach((ele) => {
+    ele.draw();
+  });
 });
 
 window.addEventListener("click", (e) => {
@@ -423,11 +432,6 @@ function reset() {
   gameLoop();
 }
 
-function init() {
-  player.draw();
-  base.draw();
-}
-init();
 spawnEnemies();
 
 function gameLoop() {
