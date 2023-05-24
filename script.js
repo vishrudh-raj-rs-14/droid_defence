@@ -4,7 +4,20 @@ canvas.height = window.innerHeight;
 let pause = document.querySelector(".pause");
 let paused = false;
 let ctx = canvas.getContext("2d");
-let maxFPS = 60;
+let spreadBullets = false;
+let shielded = false;
+let shieldInterval;
+let bouncy = false;
+let bouncyinterval;
+let shoot = new Audio("./assets/shoot.mp3");
+let damageAudio = new Audio("./assets/hurt.mp3");
+shoot.volume = 0.6;
+let gamebg = new Audio("./assets/gamebg.mpeg");
+gamebg.loop = true;
+gamebg.volume = 0.5;
+gamebg.autoplay = true;
+let spreadInterval;
+let maxFPS = 50;
 let mouse = {
   x: undefined,
   y: undefined,
@@ -65,32 +78,61 @@ window.addEventListener("mousemove", (e) => {
   mouse.y = e.clientY;
 });
 
+let wdown = false;
+let adown = false;
+let sdown = false;
+let ddown = false;
+
 window.addEventListener("keydown", (e) => {
   if (e.key == "a") {
+    adown = true;
     dir.x = -1;
   }
   if (e.key == "w") {
+    wdown = true;
     dir.y = -1;
   }
   if (e.key == "s") {
+    sdown = true;
     dir.y = 1;
   }
   if (e.key == "d") {
+    ddown = true;
     dir.x = 1;
   }
 });
 window.addEventListener("keyup", (e) => {
   if (e.key == "a") {
-    dir.x = 0;
+    adown = false;
+    if (!ddown) {
+      dir.x = 0;
+    } else {
+      dir.x = -dir.x;
+    }
   }
   if (e.key == "w") {
-    dir.y = 0;
+    wdown = false;
+    if (!sdown) {
+      dir.y = 0;
+    } else {
+      dir.y = -dir.y;
+    }
   }
   if (e.key == "s") {
-    dir.y = 0;
+    sdown = false;
+    if (!wdown) {
+      dir.y = 0;
+    } else {
+      dir.y = -dir.y;
+    }
   }
   if (e.key == "d") {
-    dir.x = 0;
+    ddown = false;
+    if (!adown) {
+      dir.x = 0;
+    } else {
+      dir.x = -dir.x;
+    }
   }
 });
 
@@ -102,6 +144,8 @@ class Player {
     this.color = "#007FFF";
     this.speed = 5;
     this.health = 100;
+    this.width = 9;
+    this.height = 50;
   }
 
   draw() {
@@ -122,7 +166,15 @@ class Player {
     }
     ctx.rotate(angle);
     ctx.fillStyle = `#9AA3B5`;
-    ctx.fillRect(0, -10, 50, 20);
+    ctx.fillRect(0, -this.width, this.height, this.width * 2);
+    if (spreadBullets) {
+      ctx.rotate(Math.PI / 6);
+      ctx.fillStyle = `#9AA3B5`;
+      ctx.fillRect(0, -this.width, this.height, this.width * 2);
+      ctx.rotate((-1 * Math.PI) / 3);
+      ctx.fillStyle = `#9AA3B5`;
+      ctx.fillRect(0, -this.width, this.height, this.width * 2);
+    }
     ctx.restore();
     ctx.beginPath();
     ctx.moveTo(this.x, this.y);
@@ -163,11 +215,109 @@ class Player {
   }
 
   damagePlayer(amt) {
-    this.health -= amt;
-    healthBar.playerHealth -= amt;
-    scoreBoard.val -= 5;
+    if (!shielded) {
+      damageAudio.play();
+      this.health -= amt;
+      healthBar.playerHealth -= amt;
+      scoreBoard.val -= 5;
+    }
   }
 }
+
+class PowerUp {
+  constructor() {
+    this.radius = 18;
+    this.x = generateRandomNumbberBtw(
+      this.radius + 1,
+      canvas.width - this.radius + 1
+    );
+    this.y = generateRandomNumbberBtw(
+      this.radius + 1,
+      canvas.height / 2 - this.radius + 1
+    );
+    this.color;
+    this.there = true;
+    this.dx = generateRandomNumbberBtw(5, 8);
+    this.dy = generateRandomNumbberBtw(5, 8);
+    setTimeout(
+      (() => {
+        this.there = false;
+      }).bind(this),
+      10000
+    );
+  }
+  draw() {
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y);
+    ctx.fillStyle = this.color;
+    ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false);
+    ctx.fill();
+  }
+
+  update() {
+    this.x += this.dx;
+    this.y += this.dy;
+    if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
+      this.x -= this.dx;
+      this.dx = -1 * this.dx;
+    }
+    if (this.y + this.radius > canvas.height || this.y - this.radius < 0) {
+      this.y -= this.dy;
+      this.dy = -1 * this.dy;
+    }
+    this.draw();
+  }
+}
+
+class HeavyBullet extends PowerUp {
+  constructor() {
+    super();
+    this.color = `#027FFF`;
+  }
+  ability() {
+    if (spreadBullets) {
+      clearInterval(spreadInterval);
+    }
+    spreadBullets = true;
+    spreadInterval = setTimeout(() => {
+      spreadBullets = false;
+    }, 12000);
+  }
+}
+
+class Shield extends PowerUp {
+  constructor() {
+    super();
+    this.color = "#720e9e";
+  }
+  ability() {
+    if (shielded) {
+      clearInterval(shieldInterval);
+    }
+    shielded = true;
+    shieldInterval = setTimeout(() => {
+      shielded = false;
+    }, 10000);
+  }
+}
+
+class BouncyBullet extends PowerUp {
+  constructor() {
+    super();
+    this.color = "#FFC72C";
+  }
+  ability() {
+    if (bouncy) {
+      clearInterval(bouncyinterval);
+    }
+    bouncy = true;
+    bouncyinterval = setTimeout(() => {
+      bouncy = false;
+    }, 10000);
+  }
+}
+
+let powerUps = [Shield, HeavyBullet, BouncyBullet];
 
 class Enemy {
   constructor() {
@@ -185,7 +335,12 @@ class Enemy {
   }
   update() {
     if (this.target == 0) {
-      this.angle = Math.atan(Math.abs((base.y - this.y) / (base.x - this.x)));
+      this.angle = Math.atan(
+        Math.abs(
+          (base.y + base.height / 2 - this.y) /
+            (base.x + base.width / 2 - this.x)
+        )
+      );
       this.dx =
         this.x <= canvas.width / 2
           ? this.speed * Math.cos(this.angle)
@@ -283,8 +438,15 @@ class ShootingEnemy {
     if (!paused) {
       let angle;
       let aim = this.target == 0 ? base : player;
-      let y = aim.y - this.y;
-      let x = aim.x - this.x;
+      let y;
+      let x;
+      if (this.target == 0) {
+        y = aim.y + aim.height / 2 - this.y;
+        x = aim.x + aim.width / 2 - this.x;
+      } else {
+        y = aim.y - this.y;
+        x = aim.x - this.x;
+      }
       angle = Math.atan(Math.abs(y / x));
       if (x < 0 && y > 0) {
         angle = Math.PI - angle;
@@ -308,13 +470,17 @@ class ShootingEnemy {
 class Score {
   constructor() {
     this.val = 0;
-    this.x = canvas.width - 150;
+    this.x = canvas.width - 180;
+    this.highVal = !localStorage.getItem("highscore")
+      ? 0
+      : parseInt(localStorage.getItem("highscore"));
     this.y = 30;
   }
   write() {
     ctx.font = "25px Poppins";
     ctx.fillStyle = "white";
     ctx.fillText(`Score: ${this.val}`, this.x, this.y);
+    ctx.fillText(`High Score: ${this.highVal}`, this.x, this.y + 25);
   }
   resize() {
     this.x = canvas.width - 150;
@@ -355,10 +521,10 @@ class HealthBar {
 
 class Bullet {
   constructor(x, y, angle = (-1 * Math.PI) / 2) {
-    this.x = x;
-    this.y = y;
-    this.radius = 10;
-    this.speed = 10;
+    this.radius = 7;
+    this.x = x + (player.radius + 20) * Math.cos(angle);
+    this.y = y + (player.radius + 20) * Math.sin(angle);
+    this.speed = 14;
     this.dx = this.speed * Math.cos(angle);
     this.dy = this.speed * Math.sin(angle);
     this.color = "rgba(2,127,255,";
@@ -389,6 +555,16 @@ class Bullet {
   update() {
     this.y += this.dy;
     this.x += this.dx;
+    if (bouncy) {
+      if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
+        this.x -= this.dx;
+        this.dx = -1 * this.dx;
+      }
+      if (this.y + this.radius > canvas.height || this.y - this.radius < 0) {
+        this.y -= this.dy;
+        this.dy = -1 * this.dy;
+      }
+    }
     this.draw();
   }
 }
@@ -409,6 +585,32 @@ class Base {
     this.y = y - this.height / 2;
   }
   draw() {
+    if (shielded) {
+      ctx.beginPath();
+      ctx.moveTo(this.x + this.width / 2, this.y + this.height / 2);
+      ctx.fillStyle = "rgba(255,255,255,0.3)";
+      ctx.save();
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = "rgb(255,255,255)";
+      ctx.arc(
+        this.x + this.width / 2,
+        this.y + this.height / 2,
+        Math.sqrt((this.width / 2) ** 2 + (this.height / 2) ** 2),
+        0,
+        2 * Math.PI,
+        false
+      );
+      ctx.fill();
+      ctx.closePath();
+      ctx.moveTo(
+        this.x + Math.sqrt((this.width / 2) ** 2 + (this.height / 2) ** 2),
+        this.y
+      );
+      ctx.beginPath();
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(255,255,255,0.9)";
+      ctx.restore();
+    }
     ctx.fillStyle = `#FEBE10`;
     ctx.fillRect(this.x, this.y, this.width, this.height);
   }
@@ -416,9 +618,12 @@ class Base {
     this.draw();
   }
   damage(amt) {
-    this.health -= amt;
-    healthBar.health -= amt;
-    scoreBoard.val -= 10;
+    if (!shielded) {
+      damageAudio.play();
+      this.health -= amt;
+      healthBar.health -= amt;
+      scoreBoard.val -= 10;
+    }
   }
   resize() {
     this.x = canvas.width / 2 - this.width / 2;
@@ -458,7 +663,15 @@ window.addEventListener("click", (e) => {
       angle = 2 * Math.PI - angle;
     }
     let newBullet = new Bullet(player.x, player.y, angle);
+    shoot.currentTime = 0;
+    shoot.play();
     bullets.push(newBullet);
+
+    if (spreadBullets) {
+      let newBullet1 = new Bullet(player.x, player.y, angle + Math.PI / 6);
+      let newBullet2 = new Bullet(player.x, player.y, angle - Math.PI / 6);
+      bullets.push(newBullet1, newBullet2);
+    }
   }
 });
 
@@ -470,6 +683,7 @@ let bullets = [];
 let enemyBullets = [];
 let enemies = [];
 let shootingEnemies = [];
+let inPowerUps = [];
 
 function spawnEnemies() {
   if (!paused) {
@@ -484,6 +698,21 @@ function spawnEnemies() {
     );
   } else {
     return;
+  }
+}
+
+function spawnPowerUp() {
+  if (!paused && inPowerUps.length <= 3) {
+    let power = new powerUps[generateRandomNumbberBtw(0, powerUps.length)]();
+    console.log(power);
+    power.draw();
+    inPowerUps.push(power);
+  }
+  if (!checkGameOver()) {
+    setTimeout(
+      () => requestAnimationFrame(spawnPowerUp),
+      generateRandomNumbberBtw(8, 15) * 1000
+    );
   }
 }
 
@@ -509,12 +738,23 @@ function spawnShootingEnemies() {
 pause.addEventListener("click", () => {
   if (pause.dataset.state == 0) {
     pause.dataset.state = 1;
+    gamebg.pause();
     pause.innerHTML = `<img src="./assets/play.png" />`;
   } else {
     pause.dataset.state = 0;
+    gamebg.play();
     pause.innerHTML = `<img src="./assets/pause.png" />`;
   }
   paused = !paused;
+});
+
+document.addEventListener("visibilitychange", (event) => {
+  if (document.visibilityState != "visible") {
+    pause.dataset.state = 1;
+    pause.innerHTML = `<img src="./assets/play.png" />`;
+    gamebg.pause();
+    paused = true;
+  }
 });
 
 function checkGameOver() {
@@ -543,6 +783,10 @@ function reset() {
   gameLoop();
   spawnEnemies();
   spawnShootingEnemies();
+  setTimeout(
+    () => requestAnimationFrame(spawnPowerUp),
+    generateRandomNumbberBtw(8, 15) * 1000
+  );
 }
 
 function gameLoop() {
@@ -563,6 +807,14 @@ function gameLoop() {
         offscreen.push(index);
       }
     });
+    inPowerUps.forEach((ele) => {
+      ele.update();
+    });
+    for (let i = 0; i < inPowerUps.length; i++) {
+      if (!inPowerUps[i].there) {
+        delete inPowerUps[i];
+      }
+    }
     enemyBullets.forEach((ele, index) => {
       ele.update();
       if (
@@ -575,11 +827,14 @@ function gameLoop() {
       }
     });
 
+    offscreen.sort();
+    offscreenE.sort();
+
     for (let i = offscreen.length - 1; i >= 0; i--) {
-      bullets.splice(i, 1);
+      bullets.splice(offscreen[i], 1);
     }
     for (let i = offscreenE.length - 1; i >= 0; i--) {
-      enemyBullets.splice(i, 1);
+      enemyBullets.splice(offscreenE[i], 1);
     }
     enemies.forEach((ele) => {
       ele.update();
@@ -637,6 +892,30 @@ function gameLoop() {
         }
       }
     }
+
+    for (let i = 0; i < bullets.length; i++) {
+      for (let j = 0; j < inPowerUps.length; j++) {
+        if (
+          bullets[i] &&
+          inPowerUps[j] &&
+          circleCollision(bullets[i], inPowerUps[j])
+        ) {
+          inPowerUps[j].ability();
+          removeFromCanvas(bullets[i]);
+          removeFromCanvas(inPowerUps[j]);
+          delete bullets[i];
+          delete inPowerUps[j];
+        }
+      }
+    }
+    for (let j = 0; j < inPowerUps.length; j++) {
+      if (inPowerUps[j] && circleCollision(player, inPowerUps[j])) {
+        inPowerUps[j].ability();
+        removeFromCanvas(inPowerUps[j]);
+        delete inPowerUps[j];
+      }
+    }
+
     for (let i = 0; i < enemyBullets.length; i++) {
       if (enemyBullets[i] && circleRectCollision(enemyBullets[i], base)) {
         base.damage(5);
@@ -688,6 +967,11 @@ function gameLoop() {
         enemyBullets.splice(i, 1);
       }
     }
+    for (let i = inPowerUps.length - 1; i >= 0; i--) {
+      if (!inPowerUps[i]) {
+        inPowerUps.splice(i, 1);
+      }
+    }
 
     healthBar.draw();
     scoreBoard.write();
@@ -696,6 +980,13 @@ function gameLoop() {
   if (!checkGameOver()) {
     setTimeout(() => requestAnimationFrame(gameLoop), 1000 / maxFPS);
   } else {
+    // !localStorage.getItem("highscore")
+    //   ? 0
+    //   : parseInt(localStorage.getItem("highscore"));
+    if (scoreBoard.val > scoreBoard.highVal) {
+      scoreBoard.highVal = scoreBoard.val;
+      localStorage.setItem("highscore", scoreBoard.val);
+    }
     setTimeout(reset, 1000);
   }
   //   requestAnimationFrame(gameLoop);
@@ -703,4 +994,8 @@ function gameLoop() {
 
 spawnEnemies();
 spawnShootingEnemies();
+setTimeout(
+  () => requestAnimationFrame(spawnPowerUp),
+  generateRandomNumbberBtw(8, 15) * 1000
+);
 gameLoop();
