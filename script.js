@@ -19,6 +19,10 @@ function generateRandomNumbberBtw(x, y) {
   return Math.floor(Math.random() * (y - x) + x);
 }
 
+function distanceBetween(x, y) {
+  return Math.sqrt((x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2);
+}
+
 function rectangleCollision(a, b) {
   if (
     a.x + a.width > b.x &&
@@ -206,30 +210,100 @@ class Enemy {
   }
 }
 
-// class ShootingEnemy {
-//   constructor() {
-//     this.x = generateRandomNumbberBtw(0, canvas.width);
-//     this.y = -1 * generateRandomNumbberBtw(3, 9);
-//     this.speed = generateRandomNumbberBtw(2, 4);
-//     this.speed = 2;
-//     this.radius = 25;
-//     this.angle = Math.atan(Math.abs((base.y - this.y) / (base.x - this.x)));
-//     this.dx =
-//       this.x <= canvas.width / 2
-//         ? this.speed * Math.cos(this.angle)
-//         : -1 * this.speed * Math.cos(this.angle);
-//     this.dy = this.speed * Math.sin(this.angle);
-//   }
-//   draw() {
-//     ctx.fillStyle = "#662d91";
-//     ctx.fillRect(this.x, this.y, this.width, this.height);
-//   }
-//   update() {
-//     this.x += this.dx;
-//     this.y += this.dy;
-//     this.draw();
-//   }
-// }
+class ShootingEnemy {
+  constructor() {
+    this.x = generateRandomNumbberBtw(0, canvas.width);
+    this.y = -1 * generateRandomNumbberBtw(55, 75);
+    this.speed = generateRandomNumbberBtw(2, 4);
+    this.speed = 2;
+    this.radius = 25;
+    this.color = "#E54645";
+    this.interval;
+    this.health = 10;
+    this.target = Math.floor(Math.random() * 2);
+    this.angle = Math.atan(Math.abs((base.y - this.y) / (base.x - this.x)));
+    this.posTo = [
+      [50, generateRandomNumbberBtw(50, canvas.height / 2 - 10)],
+      [canvas.width / 2, generateRandomNumbberBtw(0, 40)],
+      [canvas.width - 50, generateRandomNumbberBtw(50, canvas.height / 2 - 10)],
+      [canvas.width / 2, generateRandomNumbberBtw(0, 40)],
+    ];
+    this.cur = Math.floor(Math.random() * this.posTo.length);
+  }
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    let angle;
+    let aim = this.target == 0 ? base : player;
+    let y = aim.y - this.y;
+    let x = aim.x - this.x;
+    angle = Math.atan(Math.abs(y / x));
+    if (x < 0 && y > 0) {
+      angle = Math.PI - angle;
+    } else if (x < 0 && y < 0) {
+      angle = Math.PI + angle;
+    } else if (x > 0 && y < 0) {
+      angle = 2 * Math.PI - angle;
+    }
+    ctx.rotate(angle);
+    ctx.fillStyle = `#9AA3B5`;
+    ctx.fillRect(0, -10, 50, 20);
+    ctx.restore();
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y);
+    ctx.fillStyle = this.color;
+    ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false);
+    ctx.fill();
+  }
+  update() {
+    this.angle = Math.atan(
+      Math.abs(
+        (this.posTo[this.cur][1] - this.y) / (this.posTo[this.cur][0] - this.x)
+      )
+    );
+    this.dx =
+      this.x <= this.posTo[this.cur][0]
+        ? this.speed * Math.cos(this.angle)
+        : -1 * this.speed * Math.cos(this.angle);
+    this.dy =
+      this.y <= this.posTo[this.cur][1]
+        ? this.speed * Math.sin(this.angle)
+        : -1 * this.speed * Math.sin(this.angle);
+    if (
+      Math.floor(distanceBetween([this.x, this.y], this.posTo[this.cur])) <= 5
+    ) {
+      this.cur = (this.cur + 1) % this.posTo.length;
+    }
+    this.x += this.dx;
+    this.y += this.dy;
+    this.draw();
+  }
+
+  shoot() {
+    if (!paused) {
+      let angle;
+      let aim = this.target == 0 ? base : player;
+      let y = aim.y - this.y;
+      let x = aim.x - this.x;
+      angle = Math.atan(Math.abs(y / x));
+      if (x < 0 && y > 0) {
+        angle = Math.PI - angle;
+      } else if (x < 0 && y < 0) {
+        angle = Math.PI + angle;
+      } else if (x > 0 && y < 0) {
+        angle = 2 * Math.PI - angle;
+      }
+      let newBullet = new EnemyBullets(this.x, this.y, angle);
+      enemyBullets.push(newBullet);
+    }
+    if (!checkGameOver()) {
+      this.interval = setTimeout(
+        this.shoot.bind(this),
+        generateRandomNumbberBtw(2, 5) * 1000
+      );
+    }
+  }
+}
 
 class Score {
   constructor() {
@@ -287,17 +361,19 @@ class Bullet {
     this.speed = 10;
     this.dx = this.speed * Math.cos(angle);
     this.dy = this.speed * Math.sin(angle);
+    this.color = "rgba(2,127,255,";
+
+    // #027FFF
   }
 
   draw() {
-    ctx.fillStyle = "rgba(239,1,7,1)";
+    ctx.fillStyle = `${this.color}1)`;
     ctx.beginPath();
     ctx.moveTo(this.x, this.y);
     ctx.arc(this.x, this.y, this.radius, 2 * Math.PI, false);
     ctx.fill();
     for (let i = 1; i < 10; i++) {
-      ctx.fillStyle = `rgba(239,1,7,${0.15})`;
-      console.log(ctx.fillStyle);
+      ctx.fillStyle = `${this.color}${0.15})`;
       ctx.moveTo(this.x - i * 0.2 * this.dx, this.y - i * 0.2 * this.dy);
       ctx.arc(
         this.x - i * 0.2 * this.dx,
@@ -314,6 +390,13 @@ class Bullet {
     this.y += this.dy;
     this.x += this.dx;
     this.draw();
+  }
+}
+
+class EnemyBullets extends Bullet {
+  constructor(x, y, angle = (-1 * Math.PI) / 2) {
+    super(x, y, angle);
+    this.color = "rgba(239,1,7,";
   }
 }
 
@@ -384,7 +467,9 @@ let player = new Player(50, canvas.height - 20);
 let healthBar = new HealthBar();
 let scoreBoard = new Score();
 let bullets = [];
+let enemyBullets = [];
 let enemies = [];
+let shootingEnemies = [];
 
 function spawnEnemies() {
   if (!paused) {
@@ -396,6 +481,27 @@ function spawnEnemies() {
     setTimeout(
       () => requestAnimationFrame(spawnEnemies),
       generateRandomNumbberBtw(30, 50) * 100
+    );
+  } else {
+    return;
+  }
+}
+
+function spawnShootingEnemies() {
+  if (!paused && shootingEnemies.length <= 2) {
+    let enemy = new ShootingEnemy();
+    let inteval = setTimeout(
+      enemy.shoot.bind(enemy),
+      generateRandomNumbberBtw(3, 5) * 1000
+    );
+    enemy.interval = inteval;
+    enemy.draw();
+    shootingEnemies.push(enemy);
+  }
+  if (!checkGameOver()) {
+    setTimeout(
+      () => requestAnimationFrame(spawnShootingEnemies),
+      generateRandomNumbberBtw(4, 12) * 1000
     );
   }
 }
@@ -428,11 +534,16 @@ function reset() {
   healthBar = new HealthBar();
   scoreBoard = new Score();
   bullets = [];
+  enemyBullets = [];
+  shootingEnemies.forEach((ele) => {
+    clearInterval(ele.interval);
+  });
+  shootingEnemies = [];
   enemies = [];
   gameLoop();
+  spawnEnemies();
+  spawnShootingEnemies();
 }
-
-spawnEnemies();
 
 function gameLoop() {
   if (!paused) {
@@ -440,6 +551,7 @@ function gameLoop() {
     // ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     let offscreen = [];
+    let offscreenE = [];
     bullets.forEach((ele, index) => {
       ele.update();
       if (
@@ -451,11 +563,28 @@ function gameLoop() {
         offscreen.push(index);
       }
     });
+    enemyBullets.forEach((ele, index) => {
+      ele.update();
+      if (
+        ele.x < 0 ||
+        ele.x > canvas.width ||
+        ele.y < 0 ||
+        ele.y > canvas.height
+      ) {
+        offscreenE.push(index);
+      }
+    });
 
     for (let i = offscreen.length - 1; i >= 0; i--) {
       bullets.splice(i, 1);
     }
+    for (let i = offscreenE.length - 1; i >= 0; i--) {
+      enemyBullets.splice(i, 1);
+    }
     enemies.forEach((ele) => {
+      ele.update();
+    });
+    shootingEnemies.forEach((ele) => {
       ele.update();
     });
     base.update();
@@ -475,6 +604,54 @@ function gameLoop() {
         }
       }
     }
+    for (let i = 0; i < bullets.length; i++) {
+      for (let j = 0; j < shootingEnemies.length; j++) {
+        if (
+          bullets[i] &&
+          shootingEnemies[j] &&
+          circleCollision(bullets[i], shootingEnemies[j])
+        ) {
+          scoreBoard.val += 5;
+          removeFromCanvas(bullets[i]);
+          removeFromCanvas(shootingEnemies[j]);
+          delete bullets[i];
+          shootingEnemies[j].health -= 5;
+          if (shootingEnemies[j].health <= 0) {
+            clearInterval(shootingEnemies[j].interval);
+            delete shootingEnemies[j];
+          }
+        }
+      }
+    }
+    for (let i = 0; i < bullets.length; i++) {
+      for (let j = 0; j < enemyBullets.length; j++) {
+        if (
+          bullets[i] &&
+          enemyBullets[j] &&
+          circleCollision(bullets[i], enemyBullets[j])
+        ) {
+          removeFromCanvas(bullets[i]);
+          removeFromCanvas(enemyBullets[j]);
+          delete bullets[i];
+          delete enemyBullets[j];
+        }
+      }
+    }
+    for (let i = 0; i < enemyBullets.length; i++) {
+      if (enemyBullets[i] && circleRectCollision(enemyBullets[i], base)) {
+        base.damage(5);
+        removeFromCanvas(enemyBullets[i]);
+        delete enemyBullets[i];
+      }
+    }
+
+    for (let i = 0; i < enemyBullets.length; i++) {
+      if (enemyBullets[i] && circleCollision(enemyBullets[i], player)) {
+        player.damagePlayer(5);
+        removeFromCanvas(enemyBullets[i]);
+        delete enemyBullets[i];
+      }
+    }
 
     for (let i = 0; i < enemies.length; i++) {
       if (enemies[i] && rectangleCollision(enemies[i], base)) {
@@ -491,8 +668,27 @@ function gameLoop() {
       }
     }
 
-    bullets.filter((ele) => ele);
-    enemies.filter((ele) => ele);
+    for (let i = bullets.length - 1; i >= 0; i--) {
+      if (!bullets[i]) {
+        bullets.splice(i, 1);
+      }
+    }
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      if (!enemies[i]) {
+        enemies.splice(i, 1);
+      }
+    }
+    for (let i = shootingEnemies.length - 1; i >= 0; i--) {
+      if (!shootingEnemies[i]) {
+        shootingEnemies.splice(i, 1);
+      }
+    }
+    for (let i = enemyBullets.length - 1; i >= 0; i--) {
+      if (!enemyBullets[i]) {
+        enemyBullets.splice(i, 1);
+      }
+    }
+
     healthBar.draw();
     scoreBoard.write();
   }
@@ -505,4 +701,6 @@ function gameLoop() {
   //   requestAnimationFrame(gameLoop);
 }
 
+spawnEnemies();
+spawnShootingEnemies();
 gameLoop();
