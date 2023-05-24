@@ -10,6 +10,7 @@ let shieldInterval;
 let bouncy = false;
 let bouncyinterval;
 let shoot = new Audio("./assets/shoot.mp3");
+let powerAudio = new Audio("./assets/power.mp3");
 let damageAudio = new Audio("./assets/hurt.mp3");
 shoot.volume = 0.6;
 let gamebg = new Audio("./assets/gamebg.mpeg");
@@ -900,6 +901,7 @@ function gameLoop() {
           inPowerUps[j] &&
           circleCollision(bullets[i], inPowerUps[j])
         ) {
+          powerAudio.play();
           inPowerUps[j].ability();
           removeFromCanvas(bullets[i]);
           removeFromCanvas(inPowerUps[j]);
@@ -910,6 +912,7 @@ function gameLoop() {
     }
     for (let j = 0; j < inPowerUps.length; j++) {
       if (inPowerUps[j] && circleCollision(player, inPowerUps[j])) {
+        powerAudio.play();
         inPowerUps[j].ability();
         removeFromCanvas(inPowerUps[j]);
         delete inPowerUps[j];
