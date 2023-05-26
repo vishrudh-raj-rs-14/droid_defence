@@ -8,6 +8,9 @@ let spreadBullets = false;
 let shielded = false;
 let spawnRate = 1;
 let decrementter = 0;
+let bg1 = new Image();
+bg1.src = "./assets/bg1.jpg";
+let bgAspectRatio;
 let shieldInterval;
 let speedincrementer = 0;
 let start;
@@ -977,6 +980,8 @@ let enemies = [];
 let shootingEnemies = [];
 let inPowerUps = [];
 let spawned = false;
+let imgheight = 0;
+let scrollSpeed = 1;
 
 function spawnEnemies() {
   if (!paused) {
@@ -1107,7 +1112,26 @@ function gameLoop() {
   if (!paused) {
     // ctx.fillStyle = `rgba(0,0,0,0.4)`;
     // ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+    if (imgheight >= canvas.height) {
+      imgheight = 0;
+    }
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    // ctx.drawImage(
+    //   bg1,
+    //   0,
+    //   canvas.height - imgheight,
+    //   bg1.width,
+    //   imgheight,
+    //   0,
+    //   0,
+    //   canvas.width,
+    //   imgheight
+    // );
+    ctx.drawImage(bg1, 0, imgheight, canvas.width, canvas.height);
+    // imgheight += scrollSpeed;
+    // ctx.drawImage(bg1, 0, imgheight - canvas.height);
+    ctx.fillStyle = "rgba(0,0,0,0.4)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     // if (loaded) {
     //   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     // }
@@ -1353,6 +1377,7 @@ function gameLoop() {
 window.onload = () => {
   player = new Player(50, canvas.height - 20);
   start = Date.now();
+  bgAspectRatio = bg1.height / bg1.width;
   spawnEnemies();
   difficultiyChange();
   spawnShootingEnemies();
