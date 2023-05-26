@@ -11,7 +11,7 @@ body {
 }
 
 canvas {
-  background-color: black;
+  background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
 }
 
 .pause {
@@ -26,4 +26,13 @@ canvas {
 .pause img {
   height: 100%;
   user-select: none;
+}
+
+@keyframes slide {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, -1692px, 0); /* The image width */
+  }
 }
