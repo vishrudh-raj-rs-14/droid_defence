@@ -9,7 +9,9 @@ let shielded = false;
 let spawnRate = 1;
 let decrementter = 0;
 let bg1 = new Image();
-bg1.src = "./assets/bg1.jpg";
+bg1.src = "./assets/bg2.jpg";
+let gradient = new Image();
+gradient.src = "./assets/gradient.png";
 let bgAspectRatio;
 let shieldInterval;
 let speedincrementer = 0;
@@ -928,6 +930,37 @@ class Base {
 window.addEventListener("resize", () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+
+  ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+  ctx.drawImage(
+    bg1,
+    0,
+    imgheight,
+    bg1.width,
+    bg1.height - imgheight,
+    0,
+    0,
+    bg1.width,
+    bg1.height - imgheight
+  );
+  if (bg1.height - imgheight <= canvas.height) {
+    ctx.drawImage(
+      bg1,
+      0,
+      0,
+      bg1.width,
+      bg1.height,
+      0,
+      bg1.height - imgheight,
+      bg1.width,
+      bg1.height
+    );
+  }
+  //   imgheight += scrollSpeed;
+  ctx.globalAlpha = 0.4;
+  ctx.drawImage(gradient, 0, 0, canvas.width, canvas.height);
+  ctx.globalAlpha = 1;
+  // ctx.fillStyle = "rgba(0,0,0,0.4)";
   player.draw();
   scoreBoard.resize();
   healthBar.resize();
@@ -981,7 +1014,7 @@ let shootingEnemies = [];
 let inPowerUps = [];
 let spawned = false;
 let imgheight = 0;
-let scrollSpeed = 1;
+let scrollSpeed = 0.6;
 
 function spawnEnemies() {
   if (!paused) {
@@ -1017,7 +1050,7 @@ function spawnPowerUp() {
 }
 
 function spawnShootingEnemies() {
-  if (!paused && shootingEnemies.length <= 2) {
+  if (!paused && shootingEnemies.length <= (decrementter >= 3.5 ? 3 : 2)) {
     let enemy = new ShootingEnemy();
     let inteval = setTimeout(
       enemy.shoot.bind(enemy),
@@ -1112,26 +1145,41 @@ function gameLoop() {
   if (!paused) {
     // ctx.fillStyle = `rgba(0,0,0,0.4)`;
     // ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-    if (imgheight >= canvas.height) {
+    if (imgheight >= bg1.height) {
       imgheight = 0;
     }
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-    // ctx.drawImage(
-    //   bg1,
-    //   0,
-    //   canvas.height - imgheight,
-    //   bg1.width,
-    //   imgheight,
-    //   0,
-    //   0,
-    //   canvas.width,
-    //   imgheight
-    // );
-    ctx.drawImage(bg1, 0, imgheight, canvas.width, canvas.height);
-    // imgheight += scrollSpeed;
+    ctx.drawImage(
+      bg1,
+      0,
+      imgheight,
+      bg1.width,
+      bg1.height - imgheight,
+      0,
+      0,
+      bg1.width,
+      bg1.height - imgheight
+    );
+    if (bg1.height - imgheight <= canvas.height) {
+      ctx.drawImage(
+        bg1,
+        0,
+        0,
+        bg1.width,
+        bg1.height,
+        0,
+        bg1.height - imgheight,
+        bg1.width,
+        bg1.height
+      );
+    }
+    imgheight += scrollSpeed;
+    ctx.globalAlpha = 0.4;
+    ctx.drawImage(gradient, 0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 1;
     // ctx.drawImage(bg1, 0, imgheight - canvas.height);
-    ctx.fillStyle = "rgba(0,0,0,0.4)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // ctx.fillStyle = "rgba(0,0,0,0.4)";
+    // ctx.fillRect(0, 0, canvas.width, canvas.height);
     // if (loaded) {
     //   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     // }
