@@ -28,6 +28,17 @@ let playerImg = new Image();
 playerImg.src = "./assets/ship2.png";
 let enemyShipImg = new Image();
 enemyShipImg.src = "./assets/enemyShip.png";
+let enemy1 = new Image();
+let enemy2 = new Image();
+let enemy3 = new Image();
+let enemy4 = new Image();
+
+enemy1.src = "./assets/enemy 1.svg";
+enemy2.src = "./assets/enemy 2.svg";
+enemy3.src = "./assets/enemy 3.svg";
+enemy4.src = "./assets/enemy 4.svg";
+
+let enemiesArr = [enemy1, enemy2, enemy3, enemy4];
 let bulletImg = new Image();
 bulletImg.src = "./assets/trail.png";
 let enemyBulletImg = new Image();
@@ -119,7 +130,6 @@ let sdown = false;
 let ddown = false;
 
 window.addEventListener("keydown", (e) => {
-  console.log("down", e.key);
   if (e.key == "a") {
     adown = true;
     dir.x = -1;
@@ -138,7 +148,6 @@ window.addEventListener("keydown", (e) => {
   }
 });
 window.addEventListener("keyup", (e) => {
-  console.log("up", e.key);
   if (e.key == "a") {
     adown = false;
     if (!ddown) {
@@ -329,6 +338,21 @@ pause.addEventListener("click", () => {
   paused = !paused;
 });
 
+window.addEventListener("keydown", (e) => {
+  if (e.key == "Escape") {
+    if (pause.dataset.state == 0) {
+      pause.dataset.state = 1;
+      gamebg.pause();
+      pause.innerHTML = `<img src="./assets/play.png" />`;
+    } else {
+      pause.dataset.state = 0;
+      gamebg.play();
+      pause.innerHTML = `<img src="./assets/pause.png" />`;
+    }
+    paused = !paused;
+  }
+});
+
 document.addEventListener("visibilitychange", (event) => {
   if (document.visibilityState != "visible") {
     pause.dataset.state = 1;
@@ -354,6 +378,10 @@ function reset() {
   player = new Player(50, canvas.height - 60);
   healthBar = new HealthBar();
   scoreBoard = new Score();
+  shielded = false;
+  spreadBullets = false;
+  reset(spreadInterval);
+  reset(shieldInterval);
   bullets = [];
   start = Date.now();
   enemyBullets = [];

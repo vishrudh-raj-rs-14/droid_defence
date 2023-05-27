@@ -351,7 +351,8 @@ class ShootingEnemy {
       [canvas.width / 2, generateRandomNumbberBtw(0, 40)],
     ];
     this.cur = Math.floor(Math.random() * this.posTo.length);
-    this.enemyShipImg = enemyShipImg;
+    this.enemyShipImg =
+      enemiesArr[Math.floor(Math.random() * enemiesArr.length)];
     this.spriteWidth = this.enemyShipImg.width;
     this.imgr = this.enemyShipImg.height / this.enemyShipImg.width;
     this.spritew = this.radius * 2;
@@ -418,10 +419,10 @@ class ShootingEnemy {
     // ctx.fillRect(0, -10, 50, 20);
     ctx.drawImage(
       this.enemyShipImg,
-      (-1 * this.spritew) / 2,
-      (-1 * this.spriteh) / 2,
-      this.spritew,
-      this.spriteh
+      (-1 * this.spritew * 1.5) / 2,
+      (-1 * this.spriteh * 1.5) / 2,
+      this.spritew * 1.5,
+      this.spriteh * 1.5
     );
     ctx.restore();
   }
@@ -588,23 +589,23 @@ class Bullet {
   //   }
 
   draw() {
-    ctx.fillStyle = `${this.color}1)`;
-    ctx.beginPath();
-    ctx.moveTo(this.x, this.y);
-    ctx.arc(this.x, this.y, this.radius, 2 * Math.PI, false);
-    ctx.fill();
-    for (let i = 1; i < 10; i++) {
-      ctx.fillStyle = `${this.color}${0.15})`;
-      ctx.moveTo(this.x - i * 0.2 * this.dx, this.y - i * 0.2 * this.dy);
-      ctx.arc(
-        this.x - i * 0.2 * this.dx,
-        this.y - i * 0.2 * this.dy,
-        this.radius,
-        2 * Math.PI,
-        false
-      );
-      ctx.fill();
-    }
+    // ctx.fillStyle = `${this.color}1)`;
+    // ctx.beginPath();
+    // ctx.moveTo(this.x, this.y);
+    // ctx.arc(this.x, this.y, this.radius, 2 * Math.PI, false);
+    // ctx.fill();
+    // for (let i = 1; i < 10; i++) {
+    //   ctx.fillStyle = `${this.color}${0.15})`;
+    //   ctx.moveTo(this.x - i * 0.2 * this.dx, this.y - i * 0.2 * this.dy);
+    //   ctx.arc(
+    //     this.x - i * 0.2 * this.dx,
+    //     this.y - i * 0.2 * this.dy,
+    //     this.radius,
+    //     2 * Math.PI,
+    //     false
+    //   );
+    //   ctx.fill();
+    // }
     ctx.save();
     ctx.translate(this.x, this.y);
     // angle = angle + Math.PI / 2;
