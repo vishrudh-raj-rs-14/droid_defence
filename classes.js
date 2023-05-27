@@ -84,16 +84,11 @@ class Player {
     if (mouse.x && mouse.y) {
       let y = mouse.y - this.y;
       let x = mouse.x - this.x;
-      angle = Math.atan(Math.abs(y / x));
-      if (x < 0 && y > 0) {
-        angle = Math.PI - angle;
-      } else if (x < 0 && y < 0) {
-        angle = Math.PI + angle;
-      } else if (x > 0 && y < 0) {
-        angle = 2 * Math.PI - angle;
-      }
+      angle = Math.atan2(y, x);
     }
     angle = angle + Math.PI / 2;
+    // if (!angle) {
+    // }d
     ctx.rotate(angle);
     ctx.drawImage(
       this.playerImg,
@@ -269,20 +264,9 @@ class Enemy {
     this.height = 40;
     this.target = Math.floor(Math.random() * 2);
     this.sprite = meters[Math.floor(Math.random() * meters.length)];
+    // this.sprite = missle;
+    this.rotateangle = 0;
     this.spriteWidth = this.sprite.width;
-    this.sprite.onload = () => {
-      ctx.drawImage(
-        this.sprite,
-        this.x,
-        this.y,
-        this.spriteWidth,
-        this.sprite.height,
-        (-1 * this.spriteWidth) / 2,
-        (-1 * this.sprite.height) / 2,
-        this.spriteWidth,
-        this.sprite.height
-      );
-    };
   }
   draw() {
     // ctx.fillStyle = "#662d91";
@@ -298,7 +282,28 @@ class Enemy {
     //   this.width,
     //   this.height
     // );
-    ctx.drawImage(this.sprite, this.x, this.y, this.width, this.height);
+    // let angle;
+    // if (this.target == 0) {
+    //   angle = Math.atan2(
+    //     base.y + base.height / 2 - this.y,
+    //     base.x + base.width / 2 - this.x
+    //   );
+    // } else {
+    //   angle = Math.atan2(player.y - this.y, player.x - this.x);
+    // }
+    // angle -= Math.PI / 2;
+    this.rotateangle += 0.1;
+    ctx.save();
+    ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+    ctx.rotate(this.rotateangle);
+    ctx.drawImage(
+      this.sprite,
+      -this.width / 2,
+      -this.height / 2,
+      this.width,
+      this.height
+    );
+    ctx.restore();
   }
   update() {
     if (this.target == 0) {
@@ -345,10 +350,10 @@ class ShootingEnemy {
     this.target = Math.floor(Math.random() * 2);
     this.angle = Math.atan(Math.abs((base.y - this.y) / (base.x - this.x)));
     this.posTo = [
-      [50, generateRandomNumbberBtw(50, canvas.height / 2 - 10)],
-      [canvas.width / 2, generateRandomNumbberBtw(0, 40)],
-      [canvas.width - 50, generateRandomNumbberBtw(50, canvas.height / 2 - 10)],
-      [canvas.width / 2, generateRandomNumbberBtw(0, 40)],
+      [70, generateRandomNumbberBtw(150, canvas.height / 2)],
+      [canvas.width / 2, generateRandomNumbberBtw(20, 80)],
+      [canvas.width - 70, generateRandomNumbberBtw(150, canvas.height / 2)],
+      [canvas.width / 2, generateRandomNumbberBtw(20, 80)],
     ];
     this.cur = Math.floor(Math.random() * this.posTo.length);
     this.enemyShipImg =
@@ -367,38 +372,8 @@ class ShootingEnemy {
       );
     };
   }
-  //   draw() {
-  //     ctx.save();
-  //     ctx.translate(this.x, this.y);
-  //     let angle;
-  //     let aim = this.target == 0 ? base : player;
-  //     let y = aim.y - this.y;
-  //     let x = aim.x - this.x;
-  //     angle = Math.atan(Math.abs(y / x));
-  //     if (x < 0 && y > 0) {
-  //       angle = Math.PI - angle;
-  //     } else if (x < 0 && y < 0) {
-  //       angle = Math.PI + angle;
-  //     } else if (x > 0 && y < 0) {
-  //       angle = 2 * Math.PI - angle;
-  //     }
-  //     ctx.rotate(angle);
-  //     ctx.fillStyle = `#9AA3B5`;
-  //     ctx.fillRect(0, -10, 50, 20);
-  //     ctx.restore();
-  //     ctx.beginPath();
-  //     ctx.moveTo(this.x, this.y);
-  //     ctx.fillStyle = this.color;
-  //     ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false);
-  //     ctx.fill();
-  //   }
 
   draw() {
-    // ctx.beginPath();
-    // ctx.moveTo(this.x, this.y);
-    // ctx.fillStyle = this.color;
-    // ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false);
-    // ctx.fill();
     ctx.save();
     ctx.translate(this.x, this.y);
     let angle;
@@ -517,18 +492,43 @@ class HealthBar {
 
   draw() {
     ctx.fillStyle = `#F9E5E3`;
-    ctx.fillRect(this.x, this.y, this.width, this.height);
+    ctx.beginPath();
+    ctx.roundRect(this.x, this.y, this.width, this.height, 10);
+    ctx.fill();
+    ctx.closePath();
     ctx.fillStyle = `#27A313`;
-    ctx.fillRect(this.x, this.y, (this.health / 100) * this.width, this.height);
+    ctx.beginPath();
+    ctx.roundRect(
+      this.x,
+      this.y,
+      (this.health / 100) * this.width,
+      this.height,
+      10
+    );
+    ctx.fill();
+    ctx.closePath();
     ctx.fillStyle = `#F9E5E3`;
-    ctx.fillRect(this.x, this.y + this.height + 25, this.width, this.height);
+    ctx.beginPath();
+    ctx.roundRect(
+      this.x,
+      this.y + this.height + 25,
+      this.width,
+      this.height,
+      10
+    );
+    ctx.fill();
+    ctx.closePath();
     ctx.fillStyle = `#007FFF`;
-    ctx.fillRect(
+    ctx.beginPath();
+    ctx.roundRect(
       this.x,
       this.y + this.height + 25,
       (this.playerHealth / 100) * this.width,
-      this.height
+      this.height,
+      10
     );
+    ctx.fill();
+    ctx.closePath();
   }
   resize() {
     this.x = 25;
@@ -701,8 +701,10 @@ class EnemyBullets extends Bullet {
 class Base {
   constructor(x, y) {
     this.health = 100;
-    this.width = 100;
-    this.height = 100;
+    this.sprite = baseImg;
+    this.aspectRatio = this.sprite.height / this.sprite.width;
+    this.width = 170;
+    this.height = 170 * this.aspectRatio;
     this.x = x - this.width / 2;
     this.y = y - this.height / 2;
   }
@@ -733,8 +735,9 @@ class Base {
       ctx.strokeStyle = "rgba(255,255,255,0.9)";
       ctx.restore();
     }
-    ctx.fillStyle = `#FEBE10`;
-    ctx.fillRect(this.x, this.y, this.width, this.height);
+    // ctx.fillStyle = `#FEBE10`;
+    // ctx.fillRect(this.x, this.y, this.width, this.height);
+    ctx.drawImage(this.sprite, this.x, this.y, this.width, this.height);
   }
   update() {
     this.draw();
@@ -750,5 +753,67 @@ class Base {
   resize() {
     this.x = canvas.width / 2 - this.width / 2;
     this.y = canvas.height - this.height / 2 - 100;
+  }
+}
+
+class Star {
+  constructor(x, y, width, height, dx = 0, dy = 1) {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.dx = dx;
+    this.dy = dy;
+  }
+
+  draw() {
+    ctx.fillStyle = "rgba(255,255,255,1)";
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+  }
+
+  update() {
+    this.x += this.dx;
+    this.y += this.dy;
+    if (this.x > canvas.width + 10) {
+      this.x = canvas.x - 5;
+    }
+    if (this.y > canvas.height) {
+      this.y = -5;
+    }
+    this.draw();
+  }
+}
+
+class Commet {
+  constructor(x, y, toX, toY) {
+    this.x = x;
+    this.y = y;
+    this.speed = 25;
+    this.toX = toX;
+    this.toY = toY;
+    this.sprite = commet;
+    this.angle = Math.atan2(this.toY - this.y, this.toX - this.x);
+    this.dx = Math.cos(this.angle) * this.speed;
+    this.dy = Math.sin(this.angle) * this.speed;
+  }
+
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle);
+    ctx.drawImage(
+      this.sprite,
+      0,
+      0,
+      this.sprite.width / 2,
+      this.sprite.height / 1.5
+    );
+    ctx.restore();
+  }
+
+  update() {
+    this.x += this.dx;
+    this.y += this.dy;
+    this.draw();
   }
 }

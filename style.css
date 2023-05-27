@@ -9,11 +9,19 @@ body {
   height: 100vh;
   overflow: hidden;
 }
-
+/* body *:hover {
+  cursor: url("./assets/crosshair.png"), auto;
+}
+body:active *:hover {
+  cursor: url("./assets/crosshair.png"), auto;
+} */
 canvas {
   background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
+  cursor: none;
+  /* cursor: url("./assets/crosshair.png"), default; */
 }
-
+canvas:hover {
+}
 .pause {
   position: absolute;
   width: 60px;

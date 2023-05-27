@@ -3,13 +3,17 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 let pause = document.querySelector(".pause");
 let paused = false;
+let crosshair = new Image();
+crosshair.src = "./assets/crosshair.png";
 let ctx = canvas.getContext("2d");
 let spreadBullets = false;
 let shielded = false;
 let spawnRate = 1;
 let decrementter = 0;
+let commet = new Image();
+commet.src = "./assets/commet.png";
 let bg1 = new Image();
-bg1.src = "./assets/bg2.jpg";
+bg1.src = "./assets/bg5.jpg";
 let gradient = new Image();
 gradient.src = "./assets/gradient.png";
 let bgAspectRatio;
@@ -32,13 +36,17 @@ let enemy1 = new Image();
 let enemy2 = new Image();
 let enemy3 = new Image();
 let enemy4 = new Image();
-
+let enemy5 = new Image();
+let missle = new Image();
 enemy1.src = "./assets/enemy 1.svg";
 enemy2.src = "./assets/enemy 2.svg";
 enemy3.src = "./assets/enemy 3.svg";
 enemy4.src = "./assets/enemy 4.svg";
-
-let enemiesArr = [enemy1, enemy2, enemy3, enemy4];
+enemy5.src = "./assets/space-ship.png";
+missle.src = "./assets/missile.png";
+let baseImg = new Image();
+baseImg.src = "./assets/base2.png";
+let enemiesArr = [enemy1, enemy2, enemy3];
 let bulletImg = new Image();
 bulletImg.src = "./assets/trail.png";
 let enemyBulletImg = new Image();
@@ -183,23 +191,14 @@ window.addEventListener("keyup", (e) => {
 });
 
 let powerUps = [Shield, HeavyBullet];
-
+canvas.style.cursor = "none";
 window.addEventListener("resize", () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
   ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-  ctx.drawImage(
-    bg1,
-    0,
-    imgheight,
-    bg1.width,
-    bg1.height - imgheight,
-    0,
-    0,
-    bg1.width,
-    bg1.height - imgheight
-  );
+  createStars();
+  stars.forEach((ele) => ele.draw());
   if (bg1.height - imgheight <= canvas.height) {
     ctx.drawImage(
       bg1,
@@ -238,14 +237,7 @@ canvas.addEventListener("click", (e) => {
     let angle;
     let y = e.clientY - player.y;
     let x = e.clientX - player.x;
-    angle = Math.atan(Math.abs(y / x));
-    if (x < 0 && y > 0) {
-      angle = Math.PI - angle;
-    } else if (x < 0 && y < 0) {
-      angle = Math.PI + angle;
-    } else if (x > 0 && y < 0) {
-      angle = 2 * Math.PI - angle;
-    }
+    angle = Math.atan2(y, x);
     let newBullet = new Bullet(player.x, player.y, angle);
     shoot.currentTime = 0;
     shoot.play();
@@ -259,8 +251,8 @@ canvas.addEventListener("click", (e) => {
   }
 });
 
-let base = new Base(canvas.width / 2, canvas.height - 100);
 let player;
+let base;
 let healthBar = new HealthBar();
 let scoreBoard = new Score();
 let bullets = [];
@@ -269,7 +261,9 @@ let enemyBullets = [];
 let enemies = [];
 let shootingEnemies = [];
 let inPowerUps = [];
+let stars = [];
 let spawned = false;
+let shootingStars = [];
 let imgheight = 0;
 let scrollSpeed = 0.6;
 
@@ -374,14 +368,14 @@ function checkGameOver() {
 
 function reset() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  base = new Base(canvas.width / 2, canvas.height - 100);
+  base = new Base(canvas.width / 2, canvas.height - 140);
   player = new Player(50, canvas.height - 60);
   healthBar = new HealthBar();
   scoreBoard = new Score();
   shielded = false;
   spreadBullets = false;
-  reset(spreadInterval);
-  reset(shieldInterval);
+  clearInterval(spreadInterval);
+  clearInterval(shieldInterval);
   bullets = [];
   start = Date.now();
   enemyBullets = [];
@@ -417,16 +411,61 @@ function difficultiyChange() {
   }
 }
 
+function createStars() {
+  stars = [];
+  for (let i = 0; i < 200; i++) {
+    let star = new Star(
+      generateRandomNumbberBtw(0, canvas.width),
+      generateRandomNumbberBtw(0, canvas.height),
+      1,
+      1,
+      0,
+      0.5
+    );
+    stars.push(star);
+  }
+  for (let i = 0; i < 100; i++) {
+    let star = new Star(
+      generateRandomNumbberBtw(0, canvas.width),
+      generateRandomNumbberBtw(0, canvas.height),
+      2,
+      2,
+      0,
+      0.75
+    );
+    stars.push(star);
+  }
+  for (let i = 0; i < 50; i++) {
+    let star = new Star(
+      generateRandomNumbberBtw(0, canvas.width),
+      generateRandomNumbberBtw(0, canvas.height),
+      3,
+      3,
+      0,
+      1
+    );
+    stars.push(star);
+  }
+}
+
+function shootCommet() {
+  let y = generateRandomNumbberBtw(0, canvas.height);
+  let shootingStar = new Commet(-2, y, canvas.width + 2, canvas.height - y);
+  console.log(y);
+  shootingStars.push(shootingStar);
+  console.log(shootingStars);
+}
+
 function gameLoop() {
   if (!paused) {
-    // ctx.fillStyle = `rgba(0,0,0,0.4)`;
-    // ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
     if (imgheight >= bg1.height) {
       imgheight = 0;
     }
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-    ctx.drawImage(
-      bg1,
+    stars.forEach((ele) => ele.update());
+
+    // ctx.drawImage(
+    bg1,
       0,
       imgheight,
       bg1.width,
@@ -434,35 +473,40 @@ function gameLoop() {
       0,
       0,
       bg1.width,
-      bg1.height - imgheight
-    );
-    if (bg1.height - imgheight <= canvas.height) {
-      ctx.drawImage(
-        bg1,
-        0,
-        0,
-        bg1.width,
-        bg1.height,
-        0,
-        bg1.height - imgheight,
-        bg1.width,
-        bg1.height
-      );
-    }
-    imgheight += scrollSpeed;
+      bg1.height - imgheight;
+    // );
+    // if (bg1.height - imgheight <= canvas.height) {
+    // ctx.drawImage(
+    //   bg1,
+    //   0,
+    //   0,
+    //   bg1.width,
+    //   bg1.height,
+    //   0,
+    //   bg1.height - imgheight,
+    //   bg1.width,
+    //   bg1.height
+    // );
+    // }
+    // imgheight += scrollSpeed;
     ctx.globalAlpha = 0.4;
     ctx.drawImage(gradient, 0, 0, canvas.width, canvas.height);
     ctx.globalAlpha = 1;
-    // ctx.drawImage(bg1, 0, imgheight - canvas.height);
-    // ctx.fillStyle = "rgba(0,0,0,0.4)";
-    // ctx.fillRect(0, 0, canvas.width, canvas.height);
-    // if (loaded) {
-    //   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    // }
-    // if (Math.floor((Date.now() - start) / 1000) % 15 == 0 && spawned) {
-    //   spawnRate += 1;
-    //   spawned = false;
-    // }
+    shootingStars.forEach((ele) => ele.update());
+    let x = shootingStars.length;
+    for (let i = x - 1; i >= 0; i--) {
+      if (shootingStars[i]) {
+        shootingStars[i].update();
+        if (
+          shootingStars[i].x > canvas.width + 10 ||
+          shootingStars[i].x <= -10 ||
+          shootingStars[i].y > canvas.height + 10 ||
+          shootingStars[i].y < -10
+        ) {
+          shootingStars.splice(i, 1);
+        }
+      }
+    }
     let offscreen = [];
     let offscreenE = [];
     bullets.forEach((ele, index) => {
@@ -514,6 +558,19 @@ function gameLoop() {
     });
     base.update();
     player.update();
+    if (mouse.x && mouse.y) {
+      ctx.drawImage(
+        crosshair,
+        mouse.x - crosshair.width / 2,
+        mouse.y - crosshair.height / 2
+      );
+    } else {
+      ctx.drawImage(
+        crosshair,
+        canvas.width / 2 - crosshair.width / 2,
+        canvas.height / 2 - crosshair.height / 2
+      );
+    }
     for (let i = 0; i < bullets.length; i++) {
       for (let j = 0; j < enemies.length; j++) {
         if (
@@ -698,8 +755,10 @@ function gameLoop() {
   }
 }
 
+createStars();
 window.onload = () => {
   player = new Player(50, canvas.height - 20);
+  base = new Base(canvas.width / 2, canvas.height - 140);
   start = Date.now();
   bgAspectRatio = bg1.height / bg1.width;
   spawnEnemies();
