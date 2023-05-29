@@ -191,6 +191,7 @@ window.addEventListener("keyup", (e) => {
 });
 
 let powerUps = [Shield, HeavyBullet];
+canvas.style.cursor = "none";
 window.addEventListener("resize", () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -322,10 +323,12 @@ pause.addEventListener("click", () => {
   if (pause.dataset.state == 0) {
     pause.dataset.state = 1;
     gamebg.pause();
+    canvas.style.cursor = "default";
     pause.innerHTML = `<img src="./assets/play.png" />`;
   } else {
     pause.dataset.state = 0;
     gamebg.play();
+    canvas.style.cursor = "none";
     pause.innerHTML = `<img src="./assets/pause.png" />`;
   }
   paused = !paused;
@@ -336,10 +339,13 @@ window.addEventListener("keydown", (e) => {
     if (pause.dataset.state == 0) {
       pause.dataset.state = 1;
       gamebg.pause();
+      canvas.style.cursor = "default";
       pause.innerHTML = `<img src="./assets/play.png" />`;
     } else {
       pause.dataset.state = 0;
       gamebg.play();
+      canvas.style.cursor = "none";
+
       pause.innerHTML = `<img src="./assets/pause.png" />`;
     }
     paused = !paused;
