@@ -78,6 +78,7 @@ class Player {
       ctx.strokeStyle = "rgba(255,255,255,0.9)";
       ctx.restore();
     }
+
     ctx.save();
     ctx.translate(this.x, this.y);
     let angle;
@@ -261,6 +262,7 @@ class Enemy {
     );
     this.speed = 3;
     this.width = 40;
+    this.health = 5;
     this.height = 40;
     this.target = Math.floor(Math.random() * 2);
     this.sprite = meters[Math.floor(Math.random() * meters.length)];
@@ -704,9 +706,15 @@ class Base {
     this.sprite = baseImg;
     this.aspectRatio = this.sprite.height / this.sprite.width;
     this.width = 170;
+    this.playerTurretRadius = 350;
+    this.target;
+    this.currentAngle = 0;
+    this.targetAngle = 0;
     this.height = 170 * this.aspectRatio;
     this.x = x - this.width / 2;
     this.y = y - this.height / 2;
+
+    this.shooted = false;
   }
   draw() {
     if (shielded) {
@@ -735,11 +743,104 @@ class Base {
       ctx.strokeStyle = "rgba(255,255,255,0.9)";
       ctx.restore();
     }
+    ctx.fillStyle = "rgba(255,255,255,0.025)";
+    ctx.beginPath();
+    ctx.arc(
+      this.x + this.width / 2,
+      this.y + this.height / 2,
+      this.playerTurretRadius,
+      0,
+      2 * Math.PI,
+      false
+    );
+    ctx.fill();
+    ctx.setLineDash([30, 30]);
+    // ctx.beginPath();
+    ctx.strokeStyle = "rgba(255,255,255,0.5)";
+    ctx.stroke();
     // ctx.fillStyle = `#FEBE10`;
     // ctx.fillRect(this.x, this.y, this.width, this.height);
-    ctx.drawImage(this.sprite, this.x, this.y, this.width, this.height);
+    ctx.save();
+    ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+    ctx.rotate(this.currentAngle);
+    ctx.drawImage(
+      this.sprite,
+      -this.width / 2,
+      -this.height / 2,
+      this.width,
+      this.height
+    );
+    ctx.restore();
   }
+
+  findTarget() {
+    // console.log(
+    //   distanceBetween(
+    //     [enemies.x + enemies.width / 2, enemies.y + enemies.height / 2],
+    //     [[this.x + this.width / 2, this.y + this.height / 2]]
+    //   )
+    // );
+    let found = false;
+    for (let i = 0; i < enemies.length; i++) {
+      if (
+        distanceBetween(
+          [
+            enemies[i].x + enemies[i].width / 2,
+            enemies[i].y + enemies[i].height / 2,
+          ],
+          [this.x + this.width / 2, this.y + this.height / 2]
+        ) <= this.playerTurretRadius
+      ) {
+        this.target = enemies[i];
+        this.targetAngle =
+          Math.atan2(
+            enemies[i].y + enemies[i].height / 2 - this.y - this.height / 2,
+            enemies[i].x + enemies[i].width / 2 - this.x - this.width / 2
+          ) +
+          Math.PI / 2;
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      this.target = undefined;
+      this.targetAngle = 0;
+    }
+  }
+
   update() {
+    if (this.target) {
+      this.targetAngle =
+        Math.atan2(
+          this.target.y + this.target.height / 2 - this.y - this.height / 2,
+          this.target.x + this.target.width / 2 - this.x - this.width / 2
+        ) +
+        Math.PI / 2;
+    }
+    if (!this.target || this.target.health <= 0) {
+      this.findTarget();
+    }
+    if (this.currentAngle - this.targetAngle >= 0.02) {
+      this.currentAngle -= 0.02;
+    } else if (this.currentAngle - this.targetAngle < -0.02) {
+      this.currentAngle += 0.02;
+    } else if (this.target && !this.shooted) {
+      let newBullet = new Bullet(
+        this.x + this.width / 2,
+        this.y + this.height / 2,
+        this.targetAngle - Math.PI / 2
+      );
+      shoot.currentTime = 0;
+      shoot.play();
+      this.shooted = true;
+      bullets.push(newBullet);
+      setTimeout(
+        (() => {
+          this.shooted = false;
+        }).bind(this),
+        500
+      );
+    }
     this.draw();
   }
   damage(amt) {

@@ -345,7 +345,6 @@ window.addEventListener("keydown", (e) => {
       pause.dataset.state = 0;
       gamebg.play();
       canvas.style.cursor = "none";
-
       pause.innerHTML = `<img src="./assets/pause.png" />`;
     }
     paused = !paused;
@@ -584,6 +583,7 @@ function gameLoop() {
           circleRectCollision(bullets[i], enemies[j])
         ) {
           scoreBoard.val += 10;
+          enemies[j].health = 0;
           let exp = new Explosion(
             enemies[j].x + enemies[j].width / 2,
             enemies[j].y + enemies[j].height / 2
@@ -685,6 +685,7 @@ function gameLoop() {
           enemies[i].x + enemies[i].width / 2,
           enemies[i].y + enemies[i].height / 2
         );
+        enemies[i].health = 0;
         explosions.push(exp);
         base.damage(5);
         removeFromCanvas(enemies[i]);
@@ -698,6 +699,7 @@ function gameLoop() {
           enemies[i].y + enemies[i].height / 2
         );
         explosions.push(exp);
+        enemies[i].health = 0;
         player.damagePlayer(10);
         removeFromCanvas(enemies[i]);
         delete enemies[i];
