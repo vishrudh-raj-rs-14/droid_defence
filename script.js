@@ -191,7 +191,6 @@ window.addEventListener("keyup", (e) => {
 });
 
 let powerUps = [Shield, HeavyBullet];
-canvas.style.cursor = "none";
 window.addEventListener("resize", () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -396,7 +395,7 @@ function reset() {
 }
 
 function difficultiyChange() {
-  if (decrementter < 3.5) {
+  if (decrementter < 3.68) {
     decrementter += 0.1;
   } else {
     if (speedincrementer < 2.2) {

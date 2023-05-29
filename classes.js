@@ -484,7 +484,7 @@ class HealthBar {
   constructor() {
     this.health = 100;
     this.width = 400;
-    this.height = 35;
+    this.height = 30;
     this.playerHealth = 100;
     this.x = 25;
     this.y = 25;
@@ -511,7 +511,7 @@ class HealthBar {
     ctx.beginPath();
     ctx.roundRect(
       this.x,
-      this.y + this.height + 25,
+      this.y + this.height + 20,
       this.width,
       this.height,
       10
@@ -522,7 +522,7 @@ class HealthBar {
     ctx.beginPath();
     ctx.roundRect(
       this.x,
-      this.y + this.height + 25,
+      this.y + this.height + 20,
       (this.playerHealth / 100) * this.width,
       this.height,
       10
@@ -752,7 +752,7 @@ class Base {
   }
   resize() {
     this.x = canvas.width / 2 - this.width / 2;
-    this.y = canvas.height - this.height / 2 - 100;
+    this.y = canvas.height - this.height / 2 - 140;
   }
 }
 

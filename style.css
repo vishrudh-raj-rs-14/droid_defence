@@ -17,11 +17,9 @@ body:active *:hover {
 } */
 canvas {
   background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
-  cursor: none;
   /* cursor: url("./assets/crosshair.png"), default; */
 }
-canvas:hover {
-}
+
 .pause {
   position: absolute;
   width: 60px;
