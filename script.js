@@ -32,6 +32,8 @@ let playerImg = new Image();
 playerImg.src = "./assets/ship2.png";
 let enemyShipImg = new Image();
 enemyShipImg.src = "./assets/enemyShip.png";
+let enemyMissileShip = new Image();
+enemyMissileShip.src = "./assets/spaceship.png";
 let enemy1 = new Image();
 let enemy2 = new Image();
 let enemy3 = new Image();
@@ -260,6 +262,8 @@ let explosions = [];
 let enemyBullets = [];
 let enemies = [];
 let shootingEnemies = [];
+let missileEnemyBullets = [];
+let missileEnemy = [];
 let inPowerUps = [];
 let stars = [];
 let spawned = false;
@@ -295,7 +299,7 @@ function spawnPowerUp() {
   if (!checkGameOver()) {
     setTimeout(
       () => requestAnimationFrame(spawnPowerUp),
-      generateRandomNumbberBtw(8, 15) * 1000
+      generateRandomNumbberBtw(15, 22) * 1000
     );
   }
 }
@@ -315,6 +319,25 @@ function spawnShootingEnemies() {
     setTimeout(
       () => requestAnimationFrame(spawnShootingEnemies),
       generateRandomNumbberBtw(6 - decrementter, 11 - decrementter) * 1000
+    );
+  }
+}
+
+function spawnMissileEnemy() {
+  if (!paused && missileEnemy.length <= (decrementter >= 3.5 ? 1 : 0)) {
+    let enemy = new MissileEnemy();
+    let inteval = setTimeout(
+      enemy.shoot.bind(enemy),
+      generateRandomNumbberBtw(3, 5) * 1000
+    );
+    enemy.interval = inteval;
+    enemy.draw();
+    missileEnemy.push(enemy);
+  }
+  if (!checkGameOver()) {
+    setTimeout(
+      () => requestAnimationFrame(spawnMissileEnemy),
+      generateRandomNumbberBtw(10 - decrementter, 14 - decrementter) * 1000
     );
   }
 }
@@ -387,12 +410,17 @@ function reset() {
   shootingEnemies.forEach((ele) => {
     clearInterval(ele.interval);
   });
+  missileEnemy.forEach((ele) => {
+    clearInterval(ele.interval);
+  });
   shootingEnemies = [];
+  missileEnemy = [];
   enemies = [];
   gameLoop();
   spawnEnemies();
   difficultiyChange();
   spawnShootingEnemies();
+  spawnMissileEnemy();
   setTimeout(
     () => requestAnimationFrame(spawnPowerUp),
     generateRandomNumbberBtw(8, 15) * 1000
@@ -543,7 +571,9 @@ function gameLoop() {
         offscreenE.push(index);
       }
     });
-
+    missileEnemyBullets.forEach((ele, index) => {
+      ele.update();
+    });
     offscreen.sort();
     offscreenE.sort();
 
@@ -558,6 +588,9 @@ function gameLoop() {
       ele.update();
     });
     shootingEnemies.forEach((ele) => {
+      ele.update();
+    });
+    missileEnemy.forEach((ele) => {
       ele.update();
     });
     base.update();
@@ -618,6 +651,27 @@ function gameLoop() {
       }
     }
     for (let i = 0; i < bullets.length; i++) {
+      for (let j = 0; j < missileEnemy.length; j++) {
+        if (
+          bullets[i] &&
+          missileEnemy[j] &&
+          circleCollision(bullets[i], missileEnemy[j])
+        ) {
+          scoreBoard.val += 5;
+          removeFromCanvas(bullets[i]);
+          let exp = new Explosion(missileEnemy[j].x, missileEnemy[j].y);
+          explosions.push(exp);
+          removeFromCanvas(missileEnemy[j]);
+          delete bullets[i];
+          missileEnemy[j].health -= 5;
+          if (missileEnemy[j].health <= 0) {
+            clearInterval(missileEnemy[j].interval);
+            delete missileEnemy[j];
+          }
+        }
+      }
+    }
+    for (let i = 0; i < bullets.length; i++) {
       for (let j = 0; j < enemyBullets.length; j++) {
         if (
           bullets[i] &&
@@ -632,7 +686,45 @@ function gameLoop() {
           delete enemyBullets[j];
         }
       }
+
+      for (let j = 0; j < missileEnemyBullets.length; j++) {
+        if (
+          bullets[i] &&
+          missileEnemyBullets[j] &&
+          circleRectCollision(bullets[i], missileEnemyBullets[j])
+        ) {
+          let exp = new Explosion(
+            missileEnemyBullets[j].x,
+            missileEnemyBullets[j].y
+          );
+          explosions.push(exp);
+          removeFromCanvas(bullets[i]);
+          removeFromCanvas(missileEnemyBullets[j]);
+          delete bullets[i];
+          delete missileEnemyBullets[j];
+        }
+      }
     }
+
+    // for (let i = 0; i < missileEnemyBullets.length; i++) {
+    //   for (let j = 0; j < missileEnemyBullets.length; j++) {
+    //     if (
+    //       missileEnemyBullets[i] &&
+    //       missileEnemyBullets[j] &&
+    //       rectangleCollision(missileEnemyBullets[i], missileEnemyBullets[j])
+    //     ) {
+    //       let exp = new Explosion(
+    //         missileEnemyBullets[j].x,
+    //         missileEnemyBullets[j].y
+    //       );
+    //       explosions.push(exp);
+    //       removeFromCanvas(missileEnemyBullets[i]);
+    //       removeFromCanvas(missileEnemyBullets[j]);
+    //       delete missileEnemyBullets[i];
+    //       delete missileEnemyBullets[j];
+    //     }
+    //   }
+    // }
 
     for (let i = 0; i < bullets.length; i++) {
       for (let j = 0; j < inPowerUps.length; j++) {
@@ -668,6 +760,21 @@ function gameLoop() {
         delete enemyBullets[i];
       }
     }
+    for (let i = 0; i < missileEnemyBullets.length; i++) {
+      if (
+        missileEnemyBullets[i] &&
+        rectangleCollision(missileEnemyBullets[i], base)
+      ) {
+        let exp = new Explosion(
+          missileEnemyBullets[i].x,
+          missileEnemyBullets[i].y
+        );
+        explosions.push(exp);
+        base.damage(5);
+        removeFromCanvas(missileEnemyBullets[i]);
+        delete missileEnemyBullets[i];
+      }
+    }
 
     for (let i = 0; i < enemyBullets.length; i++) {
       if (enemyBullets[i] && circleCollision(enemyBullets[i], player)) {
@@ -676,6 +783,21 @@ function gameLoop() {
         player.damagePlayer(5);
         removeFromCanvas(enemyBullets[i]);
         delete enemyBullets[i];
+      }
+    }
+    for (let i = 0; i < missileEnemyBullets.length; i++) {
+      if (
+        missileEnemyBullets[i] &&
+        circleRectCollision(player, missileEnemyBullets[i])
+      ) {
+        let exp = new Explosion(
+          missileEnemyBullets[i].x,
+          missileEnemyBullets[i].y
+        );
+        explosions.push(exp);
+        player.damagePlayer(5);
+        removeFromCanvas(missileEnemyBullets[i]);
+        delete missileEnemyBullets[i];
       }
     }
 
@@ -721,9 +843,19 @@ function gameLoop() {
         shootingEnemies.splice(i, 1);
       }
     }
+    for (let i = missileEnemy.length - 1; i >= 0; i--) {
+      if (!missileEnemy[i]) {
+        missileEnemy.splice(i, 1);
+      }
+    }
     for (let i = enemyBullets.length - 1; i >= 0; i--) {
       if (!enemyBullets[i]) {
         enemyBullets.splice(i, 1);
+      }
+    }
+    for (let i = missileEnemyBullets.length - 1; i >= 0; i--) {
+      if (!missileEnemyBullets[i]) {
+        missileEnemyBullets.splice(i, 1);
       }
     }
     for (let i = inPowerUps.length - 1; i >= 0; i--) {
@@ -771,6 +903,7 @@ window.onload = () => {
   spawnEnemies();
   difficultiyChange();
   spawnShootingEnemies();
+  spawnMissileEnemy();
   setTimeout(
     () => requestAnimationFrame(spawnPowerUp),
     generateRandomNumbberBtw(8, 15) * 1000

@@ -344,9 +344,7 @@ class ShootingEnemy {
     this.x = generateRandomNumbberBtw(0, canvas.width);
     this.y = -1 * generateRandomNumbberBtw(55, 75);
     this.speed = generateRandomNumbberBtw(2, 4);
-    this.speed = 2;
     this.radius = 30;
-    this.color = "#E54645";
     this.interval;
     this.health = 10;
     this.target = Math.floor(Math.random() * 2);
@@ -392,8 +390,6 @@ class ShootingEnemy {
     }
     angle = angle + Math.PI / 2;
     ctx.rotate(angle);
-    // ctx.fillStyle = `#9AA3B5`;
-    // ctx.fillRect(0, -10, 50, 20);
     ctx.drawImage(
       this.enemyShipImg,
       (-1 * this.spritew * 1.5) / 2,
@@ -451,6 +447,176 @@ class ShootingEnemy {
       }
       let newBullet = new EnemyBullets(this.x, this.y, angle);
       enemyBullets.push(newBullet);
+    }
+    if (!checkGameOver()) {
+      this.interval = setTimeout(
+        this.shoot.bind(this),
+        generateRandomNumbberBtw(2, 5) * 1000
+      );
+    }
+  }
+}
+
+class Missile {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.img = missle;
+    this.width = 40;
+    this.speed = 4;
+    this.angularSpeed = 0.05;
+    this.angularacc = 0.025;
+    // this.radius = this.width / 2;
+    this.acc = 0.04;
+    this.height = (this.width * missle.height) / missle.width;
+    this.rotateAngle = Math.PI / 2;
+    if (
+      distanceBetween(
+        [this.x + this.width / 2, this.y + this.height / 2],
+        [base.x + base.width / 2, base.y + base.height / 2]
+      ) <=
+      distanceBetween(
+        [player.x + player.width / 2, player.y + player.height / 2],
+        [this.x + this.width / 2, this.y + this.height / 2]
+      )
+    ) {
+      this.target = base;
+    } else {
+      this.target = player;
+    }
+    this.angle = Math.atan2(
+      this.target.y + this.target.height / 2 - this.y - this.height / 2,
+      this.target.x + this.target.width / 2 - this.x - this.width / 2
+    );
+  }
+  draw() {
+    ctx.save();
+    ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+
+    ctx.rotate(this.rotateAngle - Math.PI / 2);
+    ctx.drawImage(
+      this.img,
+      (-1 * this.width) / 2,
+      (-1 * this.height) / 2,
+      this.width,
+      this.height
+    );
+    ctx.restore();
+  }
+  update() {
+    this.speed += this.acc;
+    this.angle = Math.atan(
+      Math.abs(
+        (this.target.y + this.target.height / 2 - this.y - this.height / 2) /
+          (this.target.x + this.target.width / 2 - this.x - this.width / 2)
+      )
+    );
+    let x = this.target.x + this.target.width / 2 - this.x - this.width / 2;
+    let y = this.target.y + this.target.height / 2 - this.y - this.height / 2;
+    if (x > 0 && y <= 0) {
+      this.angle = 2 * Math.PI - this.angle;
+    } else if (x < 0 && y >= 0) {
+      this.angle = Math.PI - this.angle;
+    } else if (x < 0 && y < 0) {
+      this.angle = Math.PI + this.angle;
+    }
+    console.log(
+      (this.angle * 180) / Math.PI,
+      (this.rotateAngle * 180) / Math.PI
+    );
+    if (
+      Math.min(
+        Math.abs(this.angle - this.rotateAngle),
+        2 * Math.PI - Math.abs(this.angle - this.rotateAngle)
+      ) >= this.angularSpeed
+    ) {
+      if (
+        Math.abs(this.angle - this.rotateAngle) <=
+        2 * Math.PI - Math.abs(this.angle - this.rotateAngle)
+      ) {
+        this.rotateAngle +=
+          Math.sign(this.angle - this.rotateAngle) * this.angularSpeed;
+      } else {
+        this.rotateAngle -=
+          Math.sign(this.angle - this.rotateAngle) * this.angularSpeed;
+      }
+    }
+
+    this.rotateAngle = this.rotateAngle % (2 * Math.PI);
+    this.dx = Math.cos(this.rotateAngle) * this.speed;
+    this.dy = Math.sin(this.rotateAngle) * this.speed;
+    this.x += this.dx;
+    this.y += this.dy;
+    this.draw();
+  }
+}
+
+class MissileEnemy {
+  constructor() {
+    this.x = generateRandomNumbberBtw(0, canvas.width);
+    this.y = -1 * generateRandomNumbberBtw(55, 75);
+    this.speed = generateRandomNumbberBtw(2, 4);
+    this.radius = 30;
+    this.interval;
+    this.health = 25;
+    this.posTo = [
+      [70, generateRandomNumbberBtw(150, canvas.height / 2)],
+      [canvas.width / 2, generateRandomNumbberBtw(20, 80)],
+      [canvas.width - 70, generateRandomNumbberBtw(150, canvas.height / 2)],
+      [canvas.width / 2, generateRandomNumbberBtw(20, 80)],
+    ];
+    this.cur = Math.floor(Math.random() * this.posTo.length);
+    this.enemyShipImg = enemyMissileShip;
+    this.spriteWidth = this.enemyShipImg.width;
+    this.imgr = this.enemyShipImg.height / this.enemyShipImg.width;
+    this.spritew = this.radius * 2;
+    this.spriteh = this.spritew * this.imgr;
+  }
+
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(Math.PI);
+    ctx.drawImage(
+      this.enemyShipImg,
+      (-1 * this.spritew * 1.2) / 2,
+      (-1 * this.spriteh * 1.2) / 2,
+      this.spritew * 1.2,
+      this.spriteh * 1.2
+    );
+    ctx.restore();
+  }
+  update() {
+    this.angle = Math.atan(
+      Math.abs(
+        (this.posTo[this.cur][1] - this.y) / (this.posTo[this.cur][0] - this.x)
+      )
+    );
+    this.dx =
+      this.x <= this.posTo[this.cur][0]
+        ? this.speed * Math.cos(this.angle)
+        : -1 * this.speed * Math.cos(this.angle);
+    this.dy =
+      this.y <= this.posTo[this.cur][1]
+        ? this.speed * Math.sin(this.angle)
+        : -1 * this.speed * Math.sin(this.angle);
+    if (
+      Math.floor(distanceBetween([this.x, this.y], this.posTo[this.cur])) <= 5
+    ) {
+      this.cur = (this.cur + 1) % this.posTo.length;
+    }
+    this.x += this.dx;
+    this.y += this.dy;
+    this.draw();
+  }
+
+  shoot() {
+    if (!paused) {
+      let newBullet = new Missile(
+        this.x - this.radius / 2,
+        this.y + this.radius
+      );
+      missileEnemyBullets.push(newBullet);
     }
     if (!checkGameOver()) {
       this.interval = setTimeout(
@@ -705,12 +871,14 @@ class Base {
     this.health = 100;
     this.sprite = baseImg;
     this.aspectRatio = this.sprite.height / this.sprite.width;
-    this.width = 170;
+    this.width = 90;
+    this.imgwidth = 170;
     this.playerTurretRadius = 350;
     this.target;
     this.currentAngle = 0;
     this.targetAngle = 0;
-    this.height = 170 * this.aspectRatio;
+    this.height = 200;
+    this.imgheight = this.imgwidth * this.aspectRatio;
     this.x = x - this.width / 2;
     this.y = y - this.height / 2;
 
@@ -727,7 +895,7 @@ class Base {
       ctx.arc(
         this.x + this.width / 2,
         this.y + this.height / 2,
-        Math.sqrt((this.width / 2) ** 2 + (this.height / 2) ** 2),
+        Math.sqrt((this.imgwidth / 2) ** 2 + (this.imgheight / 2) ** 2),
         0,
         2 * Math.PI,
         false
@@ -735,7 +903,8 @@ class Base {
       ctx.fill();
       ctx.closePath();
       ctx.moveTo(
-        this.x + Math.sqrt((this.width / 2) ** 2 + (this.height / 2) ** 2),
+        this.x +
+          Math.sqrt((this.imgwidth / 2) ** 2 + (this.imgheight / 2) ** 2),
         this.y
       );
       ctx.beginPath();
@@ -758,19 +927,20 @@ class Base {
     // ctx.beginPath();
     ctx.strokeStyle = "rgba(255,255,255,0.5)";
     ctx.stroke();
-    // ctx.fillStyle = `#FEBE10`;
-    // ctx.fillRect(this.x, this.y, this.width, this.height);
+
     ctx.save();
     ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
     ctx.rotate(this.currentAngle);
     ctx.drawImage(
       this.sprite,
-      -this.width / 2,
-      -this.height / 2,
-      this.width,
-      this.height
+      -this.imgwidth / 2,
+      -this.imgheight / 2,
+      this.imgwidth,
+      this.imgheight
     );
     ctx.restore();
+    // ctx.fillStyle = `#FEBE105A`;
+    // ctx.fillRect(this.x, this.y, this.width, this.height);
   }
 
   findTarget() {
