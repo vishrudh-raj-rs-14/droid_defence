@@ -404,6 +404,7 @@ function reset() {
   clearInterval(spreadInterval);
   clearInterval(shieldInterval);
   bullets = [];
+  missileEnemyBullets = [];
   start = Date.now();
   enemyBullets = [];
   decrementter = 0;

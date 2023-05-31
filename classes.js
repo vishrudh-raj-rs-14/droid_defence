@@ -4,7 +4,7 @@ class Player {
     this.y = y;
     this.radius = 30;
     this.color = "#007FFF";
-    this.speed = 5;
+    this.speed = 7;
     this.health = 100;
     this.width = 9;
     this.height = 50;
@@ -465,9 +465,9 @@ class Missile {
     this.width = 40;
     this.speed = 4;
     this.angularSpeed = 0.05;
-    this.angularacc = 0.025;
+    this.angularacc = 0.00025;
     // this.radius = this.width / 2;
-    this.acc = 0.04;
+    this.acc = 0.05;
     this.height = (this.width * missle.height) / missle.width;
     this.rotateAngle = Math.PI / 2;
     if (
@@ -505,6 +505,7 @@ class Missile {
   }
   update() {
     this.speed += this.acc;
+    if (this.angularSpeed <= 0.5) this.angularSpeed += this.angularacc;
     this.angle = Math.atan(
       Math.abs(
         (this.target.y + this.target.height / 2 - this.y - this.height / 2) /
@@ -520,10 +521,11 @@ class Missile {
     } else if (x < 0 && y < 0) {
       this.angle = Math.PI + this.angle;
     }
-    console.log(
-      (this.angle * 180) / Math.PI,
-      (this.rotateAngle * 180) / Math.PI
-    );
+    // console.log(
+    //   (this.angle * 180) / Math.PI,
+    //   (this.rotateAngle * 180) / Math.PI
+    // );
+    console.log(this.angularSpeed);
     if (
       Math.min(
         Math.abs(this.angle - this.rotateAngle),
@@ -543,6 +545,9 @@ class Missile {
     }
 
     this.rotateAngle = this.rotateAngle % (2 * Math.PI);
+    if (this.rotateAngle <= 0) {
+      this.rotateAngle += Math.PI * 2;
+    }
     this.dx = Math.cos(this.rotateAngle) * this.speed;
     this.dy = Math.sin(this.rotateAngle) * this.speed;
     this.x += this.dx;
@@ -619,10 +624,10 @@ class MissileEnemy {
       missileEnemyBullets.push(newBullet);
     }
     if (!checkGameOver()) {
-      this.interval = setTimeout(
-        this.shoot.bind(this),
-        generateRandomNumbberBtw(2, 5) * 1000
-      );
+      // this.interval = setTimeout(
+      //   this.shoot.bind(this),
+      //   generateRandomNumbberBtw(2, 5) * 1000
+      // );
     }
   }
 }
