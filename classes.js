@@ -624,10 +624,10 @@ class MissileEnemy {
       missileEnemyBullets.push(newBullet);
     }
     if (!checkGameOver()) {
-      // this.interval = setTimeout(
-      //   this.shoot.bind(this),
-      //   generateRandomNumbberBtw(2, 5) * 1000
-      // );
+      this.interval = setTimeout(
+        this.shoot.bind(this),
+        generateRandomNumbberBtw(2, 4) * 1000
+      );
     }
   }
 }
