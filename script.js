@@ -11,6 +11,12 @@ let shielded = false;
 let spawnRate = 1;
 let decrementter = 0;
 let commet = new Image();
+let bossImg = new Image();
+bossImg.src = "./assets/boss.png";
+let bossIn = false;
+let bossTime = 0;
+let bossSpawnTime = 60;
+let bossInterval;
 commet.src = "./assets/commet.png";
 let bg1 = new Image();
 bg1.src = "./assets/bg5.jpg";
@@ -270,9 +276,10 @@ let spawned = false;
 let shootingStars = [];
 let imgheight = 0;
 let scrollSpeed = 0.6;
+let boss;
 
 function spawnEnemies() {
-  if (!paused) {
+  if (!paused && !bossIn) {
     for (let i = 0; i < spawnRate; i++) {
       let enemy = new Enemy();
       enemy.draw();
@@ -305,7 +312,11 @@ function spawnPowerUp() {
 }
 
 function spawnShootingEnemies() {
-  if (!paused && shootingEnemies.length <= (decrementter >= 3.5 ? 3 : 2)) {
+  if (
+    !paused &&
+    shootingEnemies.length <= (decrementter >= 3.5 ? 3 : 2) &&
+    !bossIn
+  ) {
     let enemy = new ShootingEnemy();
     let inteval = setTimeout(
       enemy.shoot.bind(enemy),
@@ -324,7 +335,11 @@ function spawnShootingEnemies() {
 }
 
 function spawnMissileEnemy() {
-  if (!paused && missileEnemy.length <= (decrementter >= 3.5 ? 1 : 0)) {
+  if (
+    !paused &&
+    missileEnemy.length <= (decrementter >= 3.5 ? 1 : 0) &&
+    !bossIn
+  ) {
     let enemy = new MissileEnemy();
     let inteval = setTimeout(
       enemy.shoot.bind(enemy),
@@ -340,6 +355,15 @@ function spawnMissileEnemy() {
       generateRandomNumbberBtw(10 - decrementter, 14 - decrementter) * 1000
     );
   }
+}
+
+function spawnBoss() {
+  boss = new Boss();
+  setTimeout(() => {
+    boss.attack();
+  }, generateRandomNumbberBtw(4, 8) * 1000);
+  bossIn = true;
+  console.log("spawned");
 }
 
 pause.addEventListener("click", () => {
@@ -395,7 +419,7 @@ function checkGameOver() {
 
 function reset() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  base = new Base(canvas.width / 2, canvas.height - 140);
+  base = new Base(canvas.width / 2, canvas.height - 160);
   player = new Player(50, canvas.height - 60);
   healthBar = new HealthBar();
   scoreBoard = new Score();
@@ -404,6 +428,11 @@ function reset() {
   clearInterval(spreadInterval);
   clearInterval(shieldInterval);
   bullets = [];
+  bossIn = false;
+  if (boss) clearInterval(boss.interval);
+  clearInterval(bossInterval);
+  boss = undefined;
+  bossTime = 0;
   missileEnemyBullets = [];
   start = Date.now();
   enemyBullets = [];
@@ -417,6 +446,9 @@ function reset() {
   shootingEnemies = [];
   missileEnemy = [];
   enemies = [];
+  bossInterval = setInterval(() => {
+    if (!paused) bossTime += 1;
+  }, 1000);
   gameLoop();
   spawnEnemies();
   difficultiyChange();
@@ -484,9 +516,7 @@ function createStars() {
 function shootCommet() {
   let y = generateRandomNumbberBtw(0, canvas.height);
   let shootingStar = new Commet(-2, y, canvas.width + 2, canvas.height - y);
-  console.log(y);
   shootingStars.push(shootingStar);
-  console.log(shootingStars);
 }
 
 function gameLoop() {
@@ -494,6 +524,12 @@ function gameLoop() {
     if (imgheight >= bg1.height) {
       imgheight = 0;
     }
+    if (bossTime >= bossSpawnTime) {
+      clearInterval(bossInterval);
+      bossTime = 0;
+      spawnBoss();
+    }
+
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     stars.forEach((ele) => ele.update());
 
@@ -556,11 +592,35 @@ function gameLoop() {
     inPowerUps.forEach((ele) => {
       ele.update();
     });
+    if (!bossIn) {
+      let width = 300;
+      let height = 12;
+      ctx.font = "25px Orbitron";
+      ctx.fillStyle = "white";
+      ctx.fillText("Boss In", canvas.width / 2 - 45, 25);
+      ctx.fillStyle = `rgba(249,229,227,0.8)`;
+      ctx.beginPath();
+      ctx.roundRect(canvas.width / 2 - width / 2, 40, width, height, 10);
+      ctx.fill();
+      ctx.closePath();
+      ctx.fillStyle = `#4B0082`;
+      ctx.beginPath();
+      ctx.roundRect(
+        canvas.width / 2 - width / 2,
+        40,
+        (bossTime / bossSpawnTime) * width,
+        height,
+        10
+      );
+      ctx.fill();
+      ctx.closePath();
+    }
     for (let i = 0; i < inPowerUps.length; i++) {
       if (!inPowerUps[i].there) {
         delete inPowerUps[i];
       }
     }
+
     enemyBullets.forEach((ele, index) => {
       ele.update();
       if (
@@ -577,17 +637,27 @@ function gameLoop() {
     });
     offscreen.sort();
     offscreenE.sort();
-
+    if (boss) {
+      boss.update();
+    }
     for (let i = offscreen.length - 1; i >= 0; i--) {
       bullets.splice(offscreen[i], 1);
     }
     for (let i = offscreenE.length - 1; i >= 0; i--) {
       enemyBullets.splice(offscreenE[i], 1);
     }
-
+    offscreenE = [];
     enemies.forEach((ele) => {
       ele.update();
+      if (ele.y > window.innerHeight * 2) {
+        ele.health = 0;
+        offscreenE.push(ele);
+      }
     });
+    offscreenE.sort();
+    for (let i = offscreenE.length - 1; i >= 0; i--) {
+      enemies.splice(offscreenE[i], 1);
+    }
     shootingEnemies.forEach((ele) => {
       ele.update();
     });
@@ -651,6 +721,28 @@ function gameLoop() {
         }
       }
     }
+    if (boss) {
+      for (let i = 0; i < bullets.length; i++) {
+        if (bullets[i] && boss && circleCollision(boss, bullets[i])) {
+          if (!boss.shielded) {
+            boss.health -= 5;
+          }
+          let exp = new Explosion(bullets[i].x, bullets[i].y);
+          explosions.push(exp);
+          delete bullets[i];
+          if (boss.health <= 0) {
+            scoreBoard.val += 150;
+            bossIn = false;
+            clearInterval(boss.interval);
+            boss = undefined;
+            clearInterval(bossInterval);
+            bossInterval = setInterval(() => {
+              bossTime += 1;
+            }, 1000);
+          }
+        }
+      }
+    }
     for (let i = 0; i < bullets.length; i++) {
       for (let j = 0; j < missileEnemy.length; j++) {
         if (
@@ -694,15 +786,14 @@ function gameLoop() {
           missileEnemyBullets[j] &&
           circleRectCollision(bullets[i], missileEnemyBullets[j])
         ) {
-          let exp = new Explosion(
-            missileEnemyBullets[j].x,
-            missileEnemyBullets[j].y
-          );
+          let exp = new Explosion(bullets[i].x, bullets[i].y);
           explosions.push(exp);
           removeFromCanvas(bullets[i]);
-          removeFromCanvas(missileEnemyBullets[j]);
+          missileEnemyBullets[j].health -= 5;
           delete bullets[i];
-          delete missileEnemyBullets[j];
+          if (missileEnemyBullets[j].health <= 0) {
+            delete missileEnemyBullets[j];
+          }
         }
       }
     }
@@ -898,7 +989,7 @@ function gameLoop() {
 createStars();
 window.onload = () => {
   player = new Player(50, canvas.height - 20);
-  base = new Base(canvas.width / 2, canvas.height - 140);
+  base = new Base(canvas.width / 2, canvas.height - 160);
   start = Date.now();
   bgAspectRatio = bg1.height / bg1.width;
   spawnEnemies();
@@ -909,5 +1000,9 @@ window.onload = () => {
     () => requestAnimationFrame(spawnPowerUp),
     generateRandomNumbberBtw(8, 15) * 1000
   );
+
+  bossInterval = setInterval(() => {
+    bossTime += 1;
+  }, 1000);
   gameLoop();
 };

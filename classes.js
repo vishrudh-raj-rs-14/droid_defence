@@ -103,6 +103,28 @@ class Player {
       this.playerImg.height
     );
     ctx.restore();
+    ctx.fillStyle = `#F9E5E3`;
+    ctx.beginPath();
+    ctx.roundRect(
+      this.x - this.radius - 5,
+      this.y + this.radius + 5,
+      this.radius * 2.3,
+      7,
+      10
+    );
+    ctx.fill();
+    ctx.closePath();
+    ctx.fillStyle = `#007FFF`;
+    ctx.beginPath();
+    ctx.roundRect(
+      this.x - this.radius - 5,
+      this.y + this.radius + 5,
+      (this.health / 100) * this.radius * 2.3,
+      7,
+      10
+    );
+    ctx.fill();
+    ctx.closePath();
     // ctx.beginPath();
     // ctx.moveTo(this.x, this.y);
     // ctx.fillStyle = this.color;
@@ -253,9 +275,19 @@ class BouncyBullet extends PowerUp {
 }
 
 class Enemy {
-  constructor() {
-    this.x = generateRandomNumbberBtw(0, canvas.width);
-    this.y = -1 * generateRandomNumbberBtw(7, 12);
+  constructor(
+    x = generateRandomNumbberBtw(0, canvas.width),
+    y = -1 * generateRandomNumbberBtw(7, 12),
+    tar = true
+  ) {
+    this.tar = tar;
+    this.x = x;
+    if (!tar) {
+      this.x +=
+        [1, -1][generateRandomNumbberBtw(0, 2)] *
+        generateRandomNumbberBtw(3, 10);
+    }
+    this.y = y;
     this.speed = generateRandomNumbberBtw(
       2 + speedincrementer,
       4 + speedincrementer
@@ -333,8 +365,12 @@ class Enemy {
           ? this.speed * Math.sin(this.angle)
           : -1 * this.speed * Math.sin(this.angle);
     }
-    this.x += this.dx;
-    this.y += this.dy;
+    if (this.tar) {
+      this.x += this.dx;
+      this.y += this.dy;
+    } else {
+      this.y += this.speed + generateRandomNumbberBtw(3, 6);
+    }
     this.draw();
   }
 }
@@ -458,10 +494,11 @@ class ShootingEnemy {
 }
 
 class Missile {
-  constructor(x, y) {
+  constructor(x, y, angle = Math.PI / 2) {
     this.x = x;
     this.y = y;
     this.img = missle;
+    this.health = 10;
     this.width = 40;
     this.speed = 4;
     this.angularSpeed = 0.05;
@@ -469,7 +506,7 @@ class Missile {
     // this.radius = this.width / 2;
     this.acc = 0.05;
     this.height = (this.width * missle.height) / missle.width;
-    this.rotateAngle = Math.PI / 2;
+    this.rotateAngle = angle;
     if (
       distanceBetween(
         [this.x + this.width / 2, this.y + this.height / 2],
@@ -525,7 +562,6 @@ class Missile {
     //   (this.angle * 180) / Math.PI,
     //   (this.rotateAngle * 180) / Math.PI
     // );
-    console.log(this.angularSpeed);
     if (
       Math.min(
         Math.abs(this.angle - this.rotateAngle),
@@ -632,6 +668,226 @@ class MissileEnemy {
   }
 }
 
+class Boss {
+  constructor(interval) {
+    this.interval;
+    this.x = window.innerWidth / 2;
+    this.speed = 2;
+    this.y = -50;
+    this.health = 250;
+    this.posTo = [
+      [70, generateRandomNumbberBtw(150, canvas.height / 2)],
+      [canvas.width / 2, generateRandomNumbberBtw(20, 80)],
+      [canvas.width - 70, generateRandomNumbberBtw(150, canvas.height / 2)],
+      [canvas.width / 2, generateRandomNumbberBtw(20, 80)],
+    ];
+    this.cur = 0;
+    this.radius = 85;
+    this.enemyShipImg = bossImg;
+    this.spriteWidth = this.enemyShipImg.width;
+    this.imgr = this.enemyShipImg.height / this.enemyShipImg.width;
+    this.spritew = this.radius * 2;
+    this.spriteh = this.spritew * this.imgr;
+    this.healthBarWidth = 275;
+    this.healthBarHeight = 20;
+    this.spinner = false;
+    this.spinAngle = 0;
+    this.shielded = true;
+    this.shooterInterval;
+    this.meteroiteShower = false;
+    this.attacks = [this.missileBlast, this.metShower];
+  }
+
+  attack() {
+    console.log(this.attacks);
+    if (!checkGameOver()) {
+      this.attacks[generateRandomNumbberBtw(0, this.attacks.length)].bind(
+        this
+      )();
+    }
+  }
+
+  draw() {
+    // ctx.fillStyle = "red";
+    // ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    // ctx.fill();
+    if (this.shielded) {
+      let grd = ctx.createRadialGradient(
+        this.x,
+        this.y + 30,
+        0,
+        this.x,
+        this.y,
+        this.radius + 25
+      );
+      grd.addColorStop(0, "rgba(255,255,255,0");
+      grd.addColorStop(1, "rgba(255, 3, 62, 0.7)");
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(
+        this.x,
+        this.y + 30,
+        this.radius + 25,
+        (-25 * Math.PI) / 180,
+        Math.PI + (25 * Math.PI) / 180
+      );
+      // ctx.globalAlpha = 0.5;
+      ctx.fill();
+      // ctx.globalAlpha = 1;
+      ctx.closePath();
+    }
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    if (this.spinner) {
+      ctx.rotate(this.spinAngle);
+    }
+    ctx.drawImage(
+      this.enemyShipImg,
+      (-1 * this.spritew * 1.2) / 2,
+      (-1 * this.spriteh * 1.2) / 2,
+      this.spritew * 1.2,
+      this.spriteh * 1.2
+    );
+    ctx.restore();
+    ctx.fillStyle = `#F9E5E3`;
+    ctx.beginPath();
+    ctx.roundRect(
+      window.innerWidth / 2 - this.healthBarWidth / 2,
+      20,
+      this.healthBarWidth,
+      this.healthBarHeight,
+      10
+    );
+    ctx.fill();
+    ctx.closePath();
+    ctx.fillStyle = `#F40009`;
+    ctx.beginPath();
+    ctx.roundRect(
+      window.innerWidth / 2 - this.healthBarWidth / 2,
+      20,
+      (this.health / 250) * this.healthBarWidth,
+      this.healthBarHeight,
+      10
+    );
+    ctx.fill();
+    ctx.closePath();
+  }
+  update() {
+    if (this.spinner) {
+      this.spinAngle += (2 * Math.PI) / 180;
+      if (this.spinAngle >= 2 * Math.PI) {
+        this.spinAngle = 0;
+        this.spinner = false;
+        clearInterval(this.shooterInterval);
+      }
+    }
+    this.angle = Math.atan(
+      Math.abs(
+        (this.posTo[this.cur][1] - this.y) / (this.posTo[this.cur][0] - this.x)
+      )
+    );
+    this.dx =
+      this.x <= this.posTo[this.cur][0]
+        ? this.speed * Math.cos(this.angle)
+        : -1 * this.speed * Math.cos(this.angle);
+    this.dy =
+      this.y <= this.posTo[this.cur][1]
+        ? this.speed * Math.sin(this.angle)
+        : -1 * this.speed * Math.sin(this.angle);
+    // console.log(this.angle, this.dx, this.dy);
+    if (
+      Math.floor(distanceBetween([this.x, this.y], this.posTo[this.cur])) <= 5
+    ) {
+      this.cur = (this.cur + 1) % this.posTo.length;
+    }
+    if (!this.meteroiteShower && !this.spinner) {
+      this.x += this.dx;
+      this.y += this.dy;
+    }
+
+    this.draw();
+  }
+
+  missileBlast() {
+    if (!paused) {
+      this.shoot();
+      setTimeout(this.shoot.bind(this), 400);
+    }
+    setTimeout(
+      (() => {
+        if (!paused) this.shoot.bind(this)();
+        this.interval = setTimeout(
+          (() => {
+            this.attack.bind(this)();
+          }).bind(this),
+          generateRandomNumbberBtw(4, 8) * 1000
+        );
+      }).bind(this),
+      800
+    );
+  }
+  metShower() {
+    this.meteroiteShower = true;
+    this.shielded = false;
+    if (!paused) {
+      for (let i = 0; i < 15; i++) {
+        let enemy = new Enemy(
+          (canvas.width / 15) * i,
+          -1 * generateRandomNumbberBtw(10, 75),
+          false
+        );
+        enemy.draw();
+        enemies.push(enemy);
+      }
+    }
+    this.interval = setTimeout(
+      (() => {
+        this.meteroiteShower = false;
+        this.shielded = true;
+        if (!checkGameOver()) {
+          setTimeout(
+            this.attack.bind(this),
+            generateRandomNumbberBtw(4, 8) * 1000
+          );
+        }
+      }).bind(this),
+      5000
+    );
+  }
+
+  spinAttack() {
+    this.spinner = true;
+    this.spinAngle = 0;
+    this.shooterInterval = setInterval(() => {
+      let newBullet = new EnemyBullets(
+        this.x,
+        this.y,
+        this.spinAngle + Math.PI / 2
+      );
+      enemyBullets.push(newBullet);
+    }, 300);
+  }
+
+  shoot() {
+    if (!paused) {
+      let newBullet = new Missile(this.x, this.y + this.radius);
+      let newBullet2 = new Missile(
+        this.x - this.radius,
+        this.y + 5,
+        Math.PI / 2 + Math.PI / 3
+      );
+      let newBullet3 = new Missile(
+        this.x + this.radius,
+        this.y + 5,
+        Math.PI / 2 - Math.PI / 3
+      );
+      missileEnemyBullets.push(newBullet);
+      missileEnemyBullets.push(newBullet2);
+      missileEnemyBullets.push(newBullet3);
+    }
+  }
+}
+
 class Score {
   constructor() {
     this.val = 0;
@@ -664,44 +920,44 @@ class HealthBar {
   }
 
   draw() {
-    ctx.fillStyle = `#F9E5E3`;
-    ctx.beginPath();
-    ctx.roundRect(this.x, this.y, this.width, this.height, 10);
-    ctx.fill();
-    ctx.closePath();
-    ctx.fillStyle = `#27A313`;
-    ctx.beginPath();
-    ctx.roundRect(
-      this.x,
-      this.y,
-      (this.health / 100) * this.width,
-      this.height,
-      10
-    );
-    ctx.fill();
-    ctx.closePath();
-    ctx.fillStyle = `#F9E5E3`;
-    ctx.beginPath();
-    ctx.roundRect(
-      this.x,
-      this.y + this.height + 20,
-      this.width,
-      this.height,
-      10
-    );
-    ctx.fill();
-    ctx.closePath();
-    ctx.fillStyle = `#007FFF`;
-    ctx.beginPath();
-    ctx.roundRect(
-      this.x,
-      this.y + this.height + 20,
-      (this.playerHealth / 100) * this.width,
-      this.height,
-      10
-    );
-    ctx.fill();
-    ctx.closePath();
+    // ctx.fillStyle = `#F9E5E3`;
+    // ctx.beginPath();
+    // ctx.roundRect(this.x, this.y, this.width, this.height, 10);
+    // ctx.fill();
+    // ctx.closePath();
+    // ctx.fillStyle = `#27A313`;
+    // ctx.beginPath();
+    // ctx.roundRect(
+    //   this.x,
+    //   this.y,
+    //   (this.health / 100) * this.width,
+    //   this.height,
+    //   10
+    // );
+    // ctx.fill();
+    // ctx.closePath();
+    // ctx.fillStyle = `#F9E5E3`;
+    // ctx.beginPath();
+    // ctx.roundRect(
+    //   this.x,
+    //   this.y + this.height + 20,
+    //   this.width,
+    //   this.height,
+    //   10
+    // );
+    // ctx.fill();
+    // ctx.closePath();
+    // ctx.fillStyle = `#007FFF`;
+    // ctx.beginPath();
+    // ctx.roundRect(
+    //   this.x,
+    //   this.y + this.height + 20,
+    //   (this.playerHealth / 100) * this.width,
+    //   this.height,
+    //   10
+    // );
+    // ctx.fill();
+    // ctx.closePath();
   }
   resize() {
     this.x = 25;
@@ -886,7 +1142,8 @@ class Base {
     this.imgheight = this.imgwidth * this.aspectRatio;
     this.x = x - this.width / 2;
     this.y = y - this.height / 2;
-
+    this.playerHealthWidth = 300;
+    this.playerHealthHeight = 15;
     this.shooted = false;
   }
   draw() {
@@ -928,11 +1185,12 @@ class Base {
       false
     );
     ctx.fill();
+    ctx.save();
     ctx.setLineDash([30, 30]);
     // ctx.beginPath();
     ctx.strokeStyle = "rgba(255,255,255,0.5)";
     ctx.stroke();
-
+    ctx.restore();
     ctx.save();
     ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
     ctx.rotate(this.currentAngle);
@@ -946,6 +1204,28 @@ class Base {
     ctx.restore();
     // ctx.fillStyle = `#FEBE105A`;
     // ctx.fillRect(this.x, this.y, this.width, this.height);
+    ctx.fillStyle = `#F9E5E3`;
+    ctx.beginPath();
+    ctx.roundRect(
+      window.innerWidth / 2 - this.playerHealthWidth / 2,
+      window.innerHeight - this.playerHealthHeight - 10,
+      this.playerHealthWidth,
+      this.playerHealthHeight,
+      10
+    );
+    ctx.fill();
+    ctx.closePath();
+    ctx.fillStyle = `#27A313`;
+    ctx.beginPath();
+    ctx.roundRect(
+      window.innerWidth / 2 - this.playerHealthWidth / 2,
+      window.innerHeight - this.playerHealthHeight - 10,
+      (this.health / 100) * this.playerHealthWidth,
+      this.playerHealthHeight,
+      10
+    );
+    ctx.fill();
+    ctx.closePath();
   }
 
   findTarget() {
@@ -992,7 +1272,11 @@ class Base {
         ) +
         Math.PI / 2;
     }
-    if (!this.target || this.target.health <= 0) {
+    if (
+      !this.target ||
+      this.target.health <= 0 ||
+      this.target.y >= window.innerHeight
+    ) {
       this.findTarget();
     }
     if (this.currentAngle - this.targetAngle >= 0.02) {
@@ -1028,7 +1312,7 @@ class Base {
   }
   resize() {
     this.x = canvas.width / 2 - this.width / 2;
-    this.y = canvas.height - this.height / 2 - 140;
+    this.y = canvas.height - this.height / 2 - 160;
   }
 }
 
