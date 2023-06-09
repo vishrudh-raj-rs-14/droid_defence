@@ -487,7 +487,7 @@ class ShootingEnemy {
     if (!checkGameOver()) {
       this.interval = setTimeout(
         this.shoot.bind(this),
-        generateRandomNumbberBtw(2, 5) * 1000
+        generateRandomNumbberBtw(4, 7) * 1000
       );
     }
   }

@@ -329,7 +329,7 @@ function spawnShootingEnemies() {
   if (!checkGameOver()) {
     setTimeout(
       () => requestAnimationFrame(spawnShootingEnemies),
-      generateRandomNumbberBtw(6 - decrementter, 11 - decrementter) * 1000
+      generateRandomNumbberBtw(8 - decrementter, 12 - decrementter) * 1000
     );
   }
 }
