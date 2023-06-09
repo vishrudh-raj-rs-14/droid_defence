@@ -314,7 +314,7 @@ function spawnPowerUp() {
 function spawnShootingEnemies() {
   if (
     !paused &&
-    shootingEnemies.length <= (decrementter >= 3.5 ? 3 : 2) &&
+    shootingEnemies.length <= (decrementter >= 3.7 ? 3 : 2) &&
     !bossIn
   ) {
     let enemy = new ShootingEnemy();
@@ -337,7 +337,7 @@ function spawnShootingEnemies() {
 function spawnMissileEnemy() {
   if (
     !paused &&
-    missileEnemy.length <= (decrementter >= 3.5 ? 1 : 0) &&
+    missileEnemy.length <= (decrementter >= 3.7 ? 1 : 0) &&
     !bossIn
   ) {
     let enemy = new MissileEnemy();
@@ -461,7 +461,7 @@ function reset() {
 }
 
 function difficultiyChange() {
-  if (decrementter < 3.68) {
+  if (decrementter < 3.7) {
     decrementter += 0.1;
   } else {
     if (speedincrementer < 2.2) {
