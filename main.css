@@ -2,7 +2,12 @@
   margin: 0;
   padding: 0;
 }
-
+body,
+html {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
 canvas {
   height: 100vh;
   width: 100vw;
@@ -23,7 +28,7 @@ canvas {
   animation-timing-function: ease, ease-in-out;
 }
 .logo img {
-  width: 100%;
+  width: 95%;
   user-select: none;
 }
 
