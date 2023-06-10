@@ -17,7 +17,6 @@ canvas {
 .logo {
   position: absolute;
   left: 50%;
-  transform-origin: 50%;
   transform: translateX(-50%) translateY(-50%);
   top: 50%;
   width: 50vw;
@@ -35,9 +34,6 @@ canvas {
 @keyframes movein {
   0% {
     top: 120%;
-  }
-  50% {
-    /* transform: translateX(-50%) scale(1.2); */
   }
   100% {
     top: 50%;
