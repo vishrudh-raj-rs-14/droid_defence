@@ -1,0 +1,87 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+canvas {
+  height: 100vh;
+  width: 100vw;
+  background-color: black;
+}
+
+.logo {
+  position: absolute;
+  left: 50%;
+  transform-origin: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  top: 50%;
+  width: 50vw;
+  animation-name: movein, grow;
+  animation-duration: 2s, 3s;
+  animation-delay: 0s, 2s;
+  animation-iteration-count: 1, infinite;
+  animation-timing-function: ease, ease-in-out;
+}
+.logo img {
+  width: 100%;
+  user-select: none;
+}
+
+@keyframes movein {
+  0% {
+    top: 120%;
+  }
+  50% {
+    /* transform: translateX(-50%) scale(1.2); */
+  }
+  100% {
+    top: 50%;
+  }
+}
+@keyframes grow {
+  0% {
+    transform: translateX(-50%) translateY(-50%) scale(1);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-50%) scale(1.075);
+  }
+  100% {
+    transform: translateX(-50%) translateY(-50%) scale(1);
+  }
+}
+
+.start {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 70%;
+  letter-spacing: 3px;
+  word-spacing: 5px;
+  color: white;
+  font-family: "Orbitron";
+  opacity: 0;
+  animation: fadein 3s ease-in-out 2s infinite;
+  animation-fill-mode: forwards;
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  to {
+    opacity: 0.3;
+  }
+}
+
+/* .start button {
+  padding: 10px 30px;
+  font-size: 20px;
+  background-color: #0c8bc6;
+  color: white;
+  outline: none;
+  border: none;
+  border-radius: 15px;
+} */

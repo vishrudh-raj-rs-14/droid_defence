@@ -13,6 +13,9 @@ let decrementter = 0;
 let commet = new Image();
 let bossImg = new Image();
 bossImg.src = "./assets/boss.png";
+let shootinginterval;
+let missileinterval;
+
 let bossIn = false;
 let bossTime = 0;
 let bossSpawnTime = 60;
@@ -29,6 +32,7 @@ let start;
 let bouncy = false;
 let bouncyinterval;
 let shoot = new Audio("./assets/shoot.mp3");
+let go = new Audio("./assets/go.mp3");
 let powerAudio = new Audio("./assets/power.mp3");
 let explosionSprite = new Image();
 explosionSprite.src = "./assets/explosion.png";
@@ -427,6 +431,8 @@ function reset() {
   spreadBullets = false;
   clearInterval(spreadInterval);
   clearInterval(shieldInterval);
+  clearInterval(shootinginterval);
+  clearInterval(missileinterval);
   bullets = [];
   bossIn = false;
   if (boss) clearInterval(boss.interval);
@@ -449,6 +455,8 @@ function reset() {
   bossInterval = setInterval(() => {
     if (!paused) bossTime += 1;
   }, 1000);
+  gamebg.currentTime = 0;
+  gamebg.play();
   gameLoop();
   spawnEnemies();
   difficultiyChange();
@@ -534,15 +542,15 @@ function gameLoop() {
     stars.forEach((ele) => ele.update());
 
     // ctx.drawImage(
-    bg1,
-      0,
-      imgheight,
-      bg1.width,
-      bg1.height - imgheight,
-      0,
-      0,
-      bg1.width,
-      bg1.height - imgheight;
+    // bg1,
+    //   0,
+    //   imgheight,
+    //   bg1.width,
+    //   bg1.height - imgheight,
+    //   0,
+    //   0,
+    //   bg1.width,
+    //   bg1.height - imgheight;
     // );
     // if (bg1.height - imgheight <= canvas.height) {
     // ctx.drawImage(
@@ -731,7 +739,7 @@ function gameLoop() {
           explosions.push(exp);
           delete bullets[i];
           if (boss.health <= 0) {
-            scoreBoard.val += 150;
+            scoreBoard.val += 500;
             bossIn = false;
             clearInterval(boss.interval);
             boss = undefined;
@@ -982,6 +990,9 @@ function gameLoop() {
       scoreBoard.highVal = scoreBoard.val;
       localStorage.setItem("highscore", scoreBoard.val);
     }
+    gamebg.pause();
+    go.volume = 1;
+    go.play();
     setTimeout(reset, 1000);
   }
 }
@@ -994,8 +1005,8 @@ window.onload = () => {
   bgAspectRatio = bg1.height / bg1.width;
   spawnEnemies();
   difficultiyChange();
-  spawnShootingEnemies();
-  spawnMissileEnemy();
+  shootinginterval = setTimeout(spawnShootingEnemies, 5000);
+  missileinterval = setTimeout(spawnMissileEnemy, 10000);
   setTimeout(
     () => requestAnimationFrame(spawnPowerUp),
     generateRandomNumbberBtw(8, 15) * 1000
