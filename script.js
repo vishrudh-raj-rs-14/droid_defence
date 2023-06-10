@@ -12,6 +12,15 @@ let spawnRate = 1;
 let decrementter = 0;
 let commet = new Image();
 let bossImg = new Image();
+let shootOrb = new Image();
+shootOrb.src = "./assets/shootOrb.png";
+let shieldOrb = new Image();
+let shieldI = new Image();
+let gunI = new Image();
+shieldI.src = "./assets/shield (1).png";
+gunI.src = "./assets/gun.png";
+
+shieldOrb.src = "./assets/shieldOrb.png";
 bossImg.src = "./assets/boss.png";
 let shootinginterval;
 let missileinterval;
@@ -310,7 +319,7 @@ function spawnPowerUp() {
   if (!checkGameOver()) {
     setTimeout(
       () => requestAnimationFrame(spawnPowerUp),
-      generateRandomNumbberBtw(15, 22) * 1000
+      generateRandomNumbberBtw(15, 19) * 1000
     );
   }
 }
@@ -745,7 +754,7 @@ function gameLoop() {
             boss = undefined;
             clearInterval(bossInterval);
             bossInterval = setInterval(() => {
-              bossTime += 1;
+              if (!paused) bossTime += 1;
             }, 1000);
           }
         }
@@ -1013,7 +1022,7 @@ window.onload = () => {
   );
 
   bossInterval = setInterval(() => {
-    bossTime += 1;
+    if (!paused) bossTime += 1;
   }, 1000);
   gameLoop();
 };

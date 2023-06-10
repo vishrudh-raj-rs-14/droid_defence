@@ -209,6 +209,16 @@ class PowerUp {
     ctx.fillStyle = this.color;
     ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false);
     ctx.fill();
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.drawImage(
+      this.sprite,
+      -this.radius + 5,
+      -this.radius + 5,
+      2 * (this.radius - 5),
+      (2 * (this.radius - 5) * this.sprite.height) / this.sprite.width
+    );
+    ctx.restore();
   }
 
   update() {
@@ -229,7 +239,8 @@ class PowerUp {
 class HeavyBullet extends PowerUp {
   constructor() {
     super();
-    this.color = `#027FFF`;
+    this.color = `#720e9e`;
+    this.sprite = gunI;
   }
   ability() {
     if (spreadBullets) {
@@ -245,7 +256,8 @@ class HeavyBullet extends PowerUp {
 class Shield extends PowerUp {
   constructor() {
     super();
-    this.color = "#720e9e";
+    this.color = "#027FFF";
+    this.sprite = shieldI;
   }
   ability() {
     if (shielded) {
