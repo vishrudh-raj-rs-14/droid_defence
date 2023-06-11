@@ -711,8 +711,7 @@ class Boss {
   }
 
   attack() {
-    console.log(this.attacks);
-    if (!checkGameOver()) {
+    if (!checkGameOver() && bossIn) {
       this.attacks[generateRandomNumbberBtw(0, this.attacks.length)].bind(
         this
       )();
@@ -1330,7 +1329,6 @@ class Base {
 
 class Star {
   constructor(x, y, width, height, dx = 0, dy = 1) {
-    console.log(x, y, width, height);
     this.x = x;
     this.y = y;
     this.width = width;

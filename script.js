@@ -376,7 +376,6 @@ function spawnBoss() {
     boss.attack();
   }, generateRandomNumbberBtw(4, 8) * 1000);
   bossIn = true;
-  console.log("spawned");
 }
 
 pause.addEventListener("click", () => {
@@ -444,7 +443,6 @@ function reset() {
   clearInterval(missileinterval);
   bullets = [];
   if (boss) {
-    console.log(boss.interval);
     clearInterval(boss.interval);
   }
   bossIn = false;
