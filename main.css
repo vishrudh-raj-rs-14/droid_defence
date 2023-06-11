@@ -14,7 +14,7 @@ canvas {
   background-color: black;
 }
 
-.logo {
+img {
   position: absolute;
   left: 50%;
   transform: translateX(-50%) translateY(-50%);
@@ -25,9 +25,6 @@ canvas {
   animation-delay: 0s, 2s;
   animation-iteration-count: 1, infinite;
   animation-timing-function: ease, ease-in-out;
-}
-.logo img {
-  width: 95%;
   user-select: none;
 }
 

@@ -443,8 +443,11 @@ function reset() {
   clearInterval(shootinginterval);
   clearInterval(missileinterval);
   bullets = [];
+  if (boss) {
+    console.log(boss.interval);
+    clearInterval(boss.interval);
+  }
   bossIn = false;
-  if (boss) clearInterval(boss.interval);
   clearInterval(bossInterval);
   boss = undefined;
   bossTime = 0;
